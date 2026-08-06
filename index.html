@@ -231,7 +231,10 @@ button{font-family:var(--font-body);}
 .toast.show{opacity:1;}
 .note{font-size:11.5px;color:var(--ink-soft);background:var(--surface-2);border:1px solid var(--line);
   border-radius:8px;padding:10px 12px;margin-bottom:14px;}
+.note.warn{background:var(--danger-soft);border-color:var(--danger);color:var(--danger);}
 </style>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -249,7 +252,7 @@ button{font-family:var(--font-body);}
   <!-- ============ VIEW: BARU ============ -->
   <div class="view active" id="view-baru">
 
-    <div class="note">Data checklist tersimpan dan dapat dilihat oleh semua security &amp; admin yang membuka aplikasi ini. Laporan bisa dikirim ke email <b>jatra_radinta@biznetnetworks.com</b> atau dibagikan ke WhatsApp setelah disimpan.</div>
+    <div class="note" id="modeNote">Data checklist tersimpan dan dapat dilihat oleh semua security &amp; admin yang membuka aplikasi ini. Laporan bisa dikirim ke email <b>jatra_radinta@biznetnetworks.com</b> atau dibagikan ke WhatsApp setelah disimpan.</div>
 
     <div class="mode-toggle">
       <button class="mode-btn keluar active" id="btnModeKeluar" onclick="setMode('keluar')">
@@ -387,6 +390,31 @@ button{font-family:var(--font-body);}
 <div class="toast" id="toast"></div>
 
 <script>
+/* ====== KONFIGURASI FIREBASE ======
+   Ganti nilai di bawah ini dengan config project Firebase Anda sendiri.
+   Cara mendapatkannya: console.firebase.google.com -> buat project ->
+   Project settings -> tambah Web App -> salin objek firebaseConfig ke sini.
+   Selama masih berisi "GANTI...", aplikasi berjalan dalam MODE LOKAL
+   (data hanya tersimpan di HP masing-masing, tidak dibagikan ke security lain). */
+const firebaseConfig = {
+  apiKey: "GANTI_API_KEY",
+  authDomain: "GANTI_PROJECT.firebaseapp.com",
+  projectId: "GANTI_PROJECT_ID",
+  storageBucket: "GANTI_PROJECT.appspot.com",
+  messagingSenderId: "GANTI_SENDER_ID",
+  appId: "GANTI_APP_ID"
+};
+
+let db = null;
+let useFirebase = false;
+try{
+  if(firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith('GANTI') && typeof firebase !== 'undefined'){
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    useFirebase = true;
+  }
+}catch(err){ console.error('Firebase gagal diinisialisasi', err); useFirebase = false; }
+
 const EMAIL_TO = "jatra_radinta@biznetnetworks.com";
 const SITE_LABEL = "BC Campang Raya - Jalan Tembesu 4";
 const VEHICLES = [
@@ -497,7 +525,7 @@ function onPhotoChosen(key, input){
     const img = new Image();
     img.onload = ()=>{
       const canvas=document.createElement('canvas');
-      const maxW=640;
+      const maxW=480;
       const scale=Math.min(1, maxW/img.width);
       canvas.width=img.width*scale; canvas.height=img.height*scale;
       const ctx=canvas.getContext('2d');
@@ -518,7 +546,7 @@ function onPhotoChosen(key, input){
       ctx.fillText(line1, 8, canvas.height-barH+fs+4);
       ctx.fillText(line2, 8, canvas.height-barH+fs*2+8);
 
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.45);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.4);
       currentPhotos[key] = dataUrl;
       const slotDiv = document.getElementById('slot_'+key);
       slotDiv.innerHTML = `<img src="${dataUrl}"><button type="button" class="remove" onclick="removePhoto(event,'${key}')">✕</button>
@@ -585,7 +613,7 @@ async function populateOpenTrips(){
   tripIndex.filter(t=>t.status==='keluar-only').forEach(t=>{
     const opt=document.createElement('option');
     opt.value=t.id;
-    opt.textContent = `${t.nopol} — ${t.pemakai} (keluar ${fmtDateID(t.keluarTanggal)} ${t.keluarJam})`;
+    opt.textContent = `${t.nopol} — ${t.pemakai} (keluar ${fmtDateID(t.keluar?.tanggal)} ${t.keluar?.jam||''})`;
     sel.appendChild(opt);
   });
 }
@@ -601,52 +629,55 @@ async function onOpenTripChange(){
   window._closingTripId = id;
 }
 
-/* ---------- Storage helpers ---------- */
+/* ---------- Storage helpers (Firestore, dengan fallback lokal per-HP) ---------- */
 async function refreshIndex(){
-  try{
-    const res = await window.storage.get('trips-index', true);
-    tripIndex = res ? JSON.parse(res.value) : [];
-  }catch(err){ tripIndex = []; }
+  if(useFirebase){
+    try{
+      const snap = await db.collection('trips').orderBy('updatedAt','desc').limit(300).get();
+      tripIndex = snap.docs.map(d=>d.data());
+    }catch(err){ console.error('gagal memuat data dari Firestore', err); tripIndex = []; }
+  } else {
+    tripIndex = [];
+    for(let i=0;i<localStorage.length;i++){
+      const k = localStorage.key(i);
+      if(k && k.startsWith('trip-detail:')){
+        try{ tripIndex.push(JSON.parse(localStorage.getItem(k))); }catch(e){}
+      }
+    }
+    tripIndex.sort((a,b)=> new Date(b.updatedAt||0) - new Date(a.updatedAt||0));
+  }
   return tripIndex;
 }
-async function saveIndex(){
-  try{
-    await window.storage.set('trips-index', JSON.stringify(tripIndex), true);
-  }catch(err){ console.error('gagal menyimpan index', err); }
-}
 async function getTripDetail(id){
-  try{
-    const res = await window.storage.get('trip-detail:'+id, true);
-    return res ? JSON.parse(res.value) : null;
-  }catch(err){ return null; }
-}
-async function saveTripDetail(id, data){
-  try{
-    const res = await window.storage.set('trip-detail:'+id, JSON.stringify(data), true);
-    if(!res) return {ok:false, error:'Penyimpanan menolak data (kemungkinan ukuran foto terlalu besar).'};
-    return {ok:true};
-  }catch(err){
-    console.error('gagal menyimpan detail trip', err);
-    return {ok:false, error: (err && err.message) ? err.message : 'Terjadi kesalahan tak dikenal.'};
+  if(useFirebase){
+    try{
+      const doc = await db.collection('trips').doc(id).get();
+      return doc.exists ? doc.data() : null;
+    }catch(err){ console.error(err); return null; }
+  } else {
+    try{ const raw = localStorage.getItem('trip-detail:'+id); return raw ? JSON.parse(raw) : null; }
+    catch(e){ return null; }
   }
 }
-function makeSmallThumb(dataUrl){
-  return new Promise(resolve=>{
-    if(!dataUrl){ resolve(null); return; }
-    const img=new Image();
-    img.onload=()=>{
-      const canvas=document.createElement('canvas');
-      const maxW=110;
-      const scale=Math.min(1, maxW/img.width);
-      canvas.width=img.width*scale; canvas.height=img.height*scale;
-      const ctx=canvas.getContext('2d');
-      ctx.drawImage(img,0,0,canvas.width,canvas.height);
-      resolve(canvas.toDataURL('image/jpeg', 0.5));
-    };
-    img.onerror=()=>resolve(null);
-    img.src=dataUrl;
-  });
+async function saveTripDetail(id, data){
+  if(useFirebase){
+    try{
+      await db.collection('trips').doc(id).set(data);
+      return {ok:true};
+    }catch(err){
+      console.error('gagal menyimpan ke Firestore', err);
+      return {ok:false, error: (err && err.message) ? err.message : 'Gagal menyimpan ke database.'};
+    }
+  } else {
+    try{
+      localStorage.setItem('trip-detail:'+id, JSON.stringify(data));
+      return {ok:true};
+    }catch(err){
+      return {ok:false, error: (err && err.message) ? err.message : 'Penyimpanan lokal penuh atau tidak tersedia.'};
+    }
+  }
 }
+
 
 function genId(){ return 't' + Date.now() + Math.random().toString(36).slice(2,7); }
 
@@ -706,9 +737,9 @@ async function submitTrip(){
   detail.keperluan = document.getElementById('f_keperluan').value;
   detail.updatedAt = new Date().toISOString();
 
-  // Cek ukuran data sebelum menyimpan agar tidak gagal diam-diam (batas penyimpanan per-key ~5MB)
+  // Cek ukuran data sebelum menyimpan (dokumen Firestore dibatasi ~1MB)
   const payload = JSON.stringify(detail);
-  if(payload.length > 4200000){
+  if(payload.length > 900000){
     toast('Foto terlalu besar untuk disimpan — hapus 1-2 foto lalu coba lagi.');
     btn.disabled=false; btn.textContent = mode==='keluar'?'Simpan Checklist Keluar':'Simpan Checklist Masuk';
     return;
@@ -720,20 +751,6 @@ async function submitTrip(){
     btn.disabled=false; btn.textContent = mode==='keluar'?'Simpan Checklist Keluar':'Simpan Checklist Masuk';
     return;
   }
-
-  // update index — pakai thumbnail kecil, bukan foto asli, agar index tidak membengkak
-  const idx = tripIndex.findIndex(t=>t.id===id);
-  const allPhotos = Object.values({...(detail.keluar?.photos||{}), ...(detail.masuk?.photos||{})}).slice(0,3);
-  const thumbs = (await Promise.all(allPhotos.map(makeSmallThumb))).filter(Boolean);
-  const summary = {
-    id, nopol, pemakai, dept: detail.dept, status: detail.status,
-    keluarTanggal: detail.keluar?.tanggal || null, keluarJam: detail.keluar?.jam || null,
-    masukTanggal: detail.masuk?.tanggal || null, masukJam: detail.masuk?.jam || null,
-    updatedAt: detail.updatedAt,
-    thumbs
-  };
-  if(idx>=0) tripIndex[idx] = summary; else tripIndex.unshift(summary);
-  await saveIndex();
 
   toast('Checklist tersimpan');
   btn.disabled=false;
@@ -864,7 +881,8 @@ async function renderHistory(){
   }
   list.innerHTML = items.map(t=>{
     const isOpen = t.status==='keluar-only';
-    const thumbs = (t.thumbs||[]).map(src=>`<img src="${src}">`).join('');
+    const allPhotos = Object.values({...(t.keluar?.photos||{}), ...(t.masuk?.photos||{})}).slice(0,3);
+    const thumbs = allPhotos.map(src=>`<img src="${src}">`).join('');
     return `
       <div class="trip-card" onclick="openDetail('${t.id}')">
         <div class="top">
@@ -875,8 +893,8 @@ async function renderHistory(){
           <span class="stamp-badge ${isOpen?'open':'closed'}">${isOpen?'KELUAR':'SELESAI'}</span>
         </div>
         <div class="meta">
-          <span>Keluar: ${t.keluarTanggal?fmtDateID(t.keluarTanggal)+' '+t.keluarJam:'-'}</span>
-          <span>Masuk: ${t.masukTanggal?fmtDateID(t.masukTanggal)+' '+t.masukJam:'-'}</span>
+          <span>Keluar: ${t.keluar?fmtDateID(t.keluar.tanggal)+' '+t.keluar.jam:'-'}</span>
+          <span>Masuk: ${t.masuk?fmtDateID(t.masuk.tanggal)+' '+t.masuk.jam:'-'}</span>
         </div>
         ${thumbs?`<div class="trip-thumbs">${thumbs}</div>`:''}
       </div>`;
@@ -907,12 +925,24 @@ function initGeo(){
     );
   }
 }
+function applyConnectionStatus(){
+  const pill = document.getElementById('statusPill');
+  const note = document.getElementById('modeNote');
+  if(useFirebase){
+    pill.textContent = '● tersambung';
+  } else {
+    pill.textContent = '● mode lokal';
+    note.classList.add('warn');
+    note.innerHTML = '⚠️ Belum tersambung ke database bersama (Firebase belum dikonfigurasi). Data saat ini hanya tersimpan di HP ini dan <b>tidak</b> terlihat oleh security/admin lain. Hubungi admin untuk memasang konfigurasi Firebase.';
+  }
+}
 window.addEventListener('DOMContentLoaded', ()=>{
   buildVehicleSelect();
   buildChecklist();
   buildDamageChips();
   buildPhotoSlots();
   resetTimeFields();
+  applyConnectionStatus();
   initGeo();
   refreshIndex();
 });
