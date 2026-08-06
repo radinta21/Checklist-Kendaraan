@@ -277,8 +277,8 @@ button{font-family:var(--font-body);}
       <div class="section-title">Data Kendaraan &amp; Pemakai</div>
       <div class="grid-2">
         <div class="field">
-          <label>Nomor Polisi</label>
-          <input type="text" id="f_nopol" class="mono" placeholder="BE 1234 XX" style="text-transform:uppercase;">
+          <label>Kendaraan</label>
+          <select id="f_nopol" class="mono" onchange="onVehicleChange()"></select>
         </div>
         <div class="field">
           <label>Departemen</label>
@@ -291,15 +291,13 @@ button{font-family:var(--font-body);}
           </select>
         </div>
       </div>
-      <div class="grid-2">
-        <div class="field">
-          <label>Nama Pemakai</label>
-          <input type="text" id="f_pemakai" placeholder="Nama driver/pemakai">
-        </div>
-        <div class="field">
-          <label>No. Telepon Pemakai</label>
-          <input type="tel" id="f_telp" class="mono" placeholder="08xx...">
-        </div>
+      <div class="field" id="customNopolField" style="display:none;">
+        <label>Nomor Polisi (manual)</label>
+        <input type="text" id="f_nopol_custom" class="mono" placeholder="BE 1234 XX" style="text-transform:uppercase;">
+      </div>
+      <div class="field">
+        <label>Nama Pemakai</label>
+        <input type="text" id="f_pemakai" placeholder="Nama driver/pemakai">
       </div>
       <div class="field">
         <label>Keperluan</label>
@@ -332,12 +330,13 @@ button{font-family:var(--font-body);}
         </div>
         <div class="field">
           <label>Nama Security (Pemeriksa)</label>
-          <input type="text" id="f_pemeriksa" placeholder="Nama security yang bertugas">
+          <select id="f_pemeriksa">
+            <option value="">Pilih pemeriksa</option>
+            <option>Diki Afrizal</option>
+            <option>Nasir</option>
+            <option>Ibnu Diansyah</option>
+          </select>
         </div>
-      </div>
-      <div class="field">
-        <label>Lokasi</label>
-        <input type="text" id="f_lokasi" placeholder="Lokasi pos">
       </div>
     </div>
 
@@ -389,7 +388,11 @@ button{font-family:var(--font-body);}
 
 <script>
 const EMAIL_TO = "jatra_radinta@biznetnetworks.com";
-const SITE_ADDRESS_DEFAULT = "21a Jalan Tembesu 4, Campang Raya, Kecamatan Sukabumi, Kota Bandar Lampung, Lampung";
+const SITE_LABEL = "BC Campang Raya - Jalan Tembesu 4";
+const VEHICLES = [
+  { nopol: "BE1058ABF", label: "Xenia 1.3 MT 2026 (BE1058ABF)" },
+  { nopol: "BE1350AAL", label: "Gran Max 1.5 MT 2022 (BE1350AAL)" }
+];
 const KOMPONEN = [
   "Label Oli","Head Unit","STNK","Safety Belt","Head Rest","Lampu Plafond","Karpet","Dongkrak",
   "Segitiga Pengaman","Kunci Roda","Kaca Spion dalam","Kaca Spion Luar","Ban Serep","Velg Racing",
@@ -494,29 +497,28 @@ function onPhotoChosen(key, input){
     const img = new Image();
     img.onload = ()=>{
       const canvas=document.createElement('canvas');
-      const maxW=900;
+      const maxW=640;
       const scale=Math.min(1, maxW/img.width);
       canvas.width=img.width*scale; canvas.height=img.height*scale;
       const ctx=canvas.getContext('2d');
       ctx.drawImage(img,0,0,canvas.width,canvas.height);
 
       // stamp overlay
-      const barH = Math.max(46, canvas.height*0.13);
+      const barH = Math.max(40, canvas.height*0.13);
       ctx.fillStyle='rgba(20,24,18,0.72)';
       ctx.fillRect(0, canvas.height-barH, canvas.width, barH);
       ctx.fillStyle='#EFEEE7';
-      const fs = Math.max(10, canvas.width*0.028);
+      const fs = Math.max(10, canvas.width*0.032);
       ctx.font = fs+'px monospace';
-      const loc = document.getElementById('f_lokasi').value || SITE_ADDRESS_DEFAULT;
       const stampDate = document.getElementById('f_tanggal').value || nowDate();
       const stampTime = document.getElementById('f_jam').value || nowTime();
       let line1 = fmtDateID(stampDate)+'  '+stampTime;
-      let line2 = loc.length>60? loc.slice(0,57)+'...' : loc;
+      let line2 = SITE_LABEL;
       if(geo) line2 += `  (${geo.lat.toFixed(5)}, ${geo.lng.toFixed(5)})`;
       ctx.fillText(line1, 8, canvas.height-barH+fs+4);
       ctx.fillText(line2, 8, canvas.height-barH+fs*2+8);
 
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.62);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.45);
       currentPhotos[key] = dataUrl;
       const slotDiv = document.getElementById('slot_'+key);
       slotDiv.innerHTML = `<img src="${dataUrl}"><button type="button" class="remove" onclick="removePhoto(event,'${key}')">✕</button>
@@ -552,6 +554,30 @@ function resetTimeFields(){
   document.getElementById('f_jam').value = nowTime();
 }
 
+function buildVehicleSelect(){
+  const sel = document.getElementById('f_nopol');
+  sel.innerHTML = VEHICLES.map(v=>`<option value="${v.nopol}">${v.label}</option>`).join('') +
+    `<option value="__custom__">Lainnya (isi manual)</option>`;
+  onVehicleChange();
+}
+function onVehicleChange(){
+  const isCustom = document.getElementById('f_nopol').value === '__custom__';
+  document.getElementById('customNopolField').style.display = isCustom ? 'block' : 'none';
+}
+function getSelectedNopol(){
+  const sel = document.getElementById('f_nopol').value;
+  if(sel === '__custom__'){
+    return document.getElementById('f_nopol_custom').value.trim().toUpperCase();
+  }
+  return sel;
+}
+function setSelectedNopol(nopol){
+  const sel = document.getElementById('f_nopol');
+  const match = VEHICLES.find(v=>v.nopol===nopol);
+  if(match){ sel.value = nopol; onVehicleChange(); }
+  else{ sel.value = '__custom__'; onVehicleChange(); document.getElementById('f_nopol_custom').value = nopol||''; }
+}
+
 async function populateOpenTrips(){
   const sel = document.getElementById('openTripSelect');
   sel.innerHTML = '<option value="">— Buat entri masuk manual (tanpa data keluar) —</option>';
@@ -568,12 +594,10 @@ async function onOpenTripChange(){
   if(!id) return;
   const detail = await getTripDetail(id);
   if(!detail) return;
-  document.getElementById('f_nopol').value = detail.nopol||'';
+  setSelectedNopol(detail.nopol||'');
   document.getElementById('f_dept').value = detail.dept||'Arco';
   document.getElementById('f_pemakai').value = detail.pemakai||'';
-  document.getElementById('f_telp').value = detail.telp||'';
   document.getElementById('f_keperluan').value = detail.keperluan||'';
-  document.getElementById('f_lokasi').value = detail.keluar?.lokasi || SITE_ADDRESS_DEFAULT;
   window._closingTripId = id;
 }
 
@@ -599,8 +623,29 @@ async function getTripDetail(id){
 async function saveTripDetail(id, data){
   try{
     const res = await window.storage.set('trip-detail:'+id, JSON.stringify(data), true);
-    return !!res;
-  }catch(err){ console.error('gagal menyimpan detail trip', err); return false; }
+    if(!res) return {ok:false, error:'Penyimpanan menolak data (kemungkinan ukuran foto terlalu besar).'};
+    return {ok:true};
+  }catch(err){
+    console.error('gagal menyimpan detail trip', err);
+    return {ok:false, error: (err && err.message) ? err.message : 'Terjadi kesalahan tak dikenal.'};
+  }
+}
+function makeSmallThumb(dataUrl){
+  return new Promise(resolve=>{
+    if(!dataUrl){ resolve(null); return; }
+    const img=new Image();
+    img.onload=()=>{
+      const canvas=document.createElement('canvas');
+      const maxW=110;
+      const scale=Math.min(1, maxW/img.width);
+      canvas.width=img.width*scale; canvas.height=img.height*scale;
+      const ctx=canvas.getContext('2d');
+      ctx.drawImage(img,0,0,canvas.width,canvas.height);
+      resolve(canvas.toDataURL('image/jpeg', 0.5));
+    };
+    img.onerror=()=>resolve(null);
+    img.src=dataUrl;
+  });
 }
 
 function genId(){ return 't' + Date.now() + Math.random().toString(36).slice(2,7); }
@@ -617,7 +662,6 @@ function collectLogBlock(){
     km: document.getElementById('f_km').value,
     bensin: document.getElementById('f_bensin').value,
     pemeriksa: document.getElementById('f_pemeriksa').value,
-    lokasi: document.getElementById('f_lokasi').value || SITE_ADDRESS_DEFAULT,
     checklist: collectChecklist(),
     damage: [...currentDamage],
     catatan: document.getElementById('f_catatan').value,
@@ -627,16 +671,20 @@ function collectLogBlock(){
 }
 
 async function submitTrip(){
-  const nopol = document.getElementById('f_nopol').value.trim().toUpperCase();
+  const nopol = getSelectedNopol();
   const pemakai = document.getElementById('f_pemakai').value.trim();
+  const pemeriksa = document.getElementById('f_pemeriksa').value;
   if(!nopol || !pemakai){
-    toast('Nomor polisi & nama pemakai wajib diisi'); return;
+    toast('Kendaraan & nama pemakai wajib diisi'); return;
+  }
+  if(!pemeriksa){
+    toast('Pilih nama security (pemeriksa)'); return;
   }
   const btn = document.getElementById('btnSubmit');
   btn.disabled = true; btn.textContent = 'Menyimpan...';
 
   await refreshIndex();
-  let id, detail, isNewClose=false;
+  let id, detail;
 
   if(mode==='masuk' && window._closingTripId){
     id = window._closingTripId;
@@ -644,34 +692,45 @@ async function submitTrip(){
     if(!detail){ detail = {id, nopol, pemakai}; }
     detail.masuk = collectLogBlock();
     detail.status = 'selesai';
-    isNewClose = true;
   } else {
     id = genId();
     detail = {
       id, nopol, dept: document.getElementById('f_dept').value,
-      pemakai, telp: document.getElementById('f_telp').value,
-      keperluan: document.getElementById('f_keperluan').value,
+      pemakai, keperluan: document.getElementById('f_keperluan').value,
       status: mode==='keluar' ? 'keluar-only' : 'masuk-only'
     };
     detail[mode] = collectLogBlock();
   }
   detail.nopol = nopol; detail.pemakai = pemakai;
   detail.dept = document.getElementById('f_dept').value;
-  detail.telp = document.getElementById('f_telp').value;
   detail.keperluan = document.getElementById('f_keperluan').value;
   detail.updatedAt = new Date().toISOString();
 
-  const ok = await saveTripDetail(id, detail);
-  if(!ok){ toast('Gagal menyimpan. Coba lagi.'); btn.disabled=false; btn.textContent = mode==='keluar'?'Simpan Checklist Keluar':'Simpan Checklist Masuk'; return; }
+  // Cek ukuran data sebelum menyimpan agar tidak gagal diam-diam (batas penyimpanan per-key ~5MB)
+  const payload = JSON.stringify(detail);
+  if(payload.length > 4200000){
+    toast('Foto terlalu besar untuk disimpan — hapus 1-2 foto lalu coba lagi.');
+    btn.disabled=false; btn.textContent = mode==='keluar'?'Simpan Checklist Keluar':'Simpan Checklist Masuk';
+    return;
+  }
 
-  // update index
+  const result = await saveTripDetail(id, detail);
+  if(!result.ok){
+    toast('Gagal menyimpan: ' + result.error);
+    btn.disabled=false; btn.textContent = mode==='keluar'?'Simpan Checklist Keluar':'Simpan Checklist Masuk';
+    return;
+  }
+
+  // update index — pakai thumbnail kecil, bukan foto asli, agar index tidak membengkak
   const idx = tripIndex.findIndex(t=>t.id===id);
+  const allPhotos = Object.values({...(detail.keluar?.photos||{}), ...(detail.masuk?.photos||{})}).slice(0,3);
+  const thumbs = (await Promise.all(allPhotos.map(makeSmallThumb))).filter(Boolean);
   const summary = {
     id, nopol, pemakai, dept: detail.dept, status: detail.status,
     keluarTanggal: detail.keluar?.tanggal || null, keluarJam: detail.keluar?.jam || null,
     masukTanggal: detail.masuk?.tanggal || null, masukJam: detail.masuk?.jam || null,
     updatedAt: detail.updatedAt,
-    thumbs: Object.values({...(detail.keluar?.photos||{}), ...(detail.masuk?.photos||{})}).slice(0,3)
+    thumbs
   };
   if(idx>=0) tripIndex[idx] = summary; else tripIndex.unshift(summary);
   await saveIndex();
@@ -683,13 +742,13 @@ async function submitTrip(){
 }
 
 function resetForm(){
-  document.getElementById('f_nopol').value='';
+  buildVehicleSelect();
+  document.getElementById('f_nopol_custom').value='';
   document.getElementById('f_pemakai').value='';
-  document.getElementById('f_telp').value='';
   document.getElementById('f_keperluan').value='';
   document.getElementById('f_catatan').value='';
-  document.getElementById('f_lokasi').value = SITE_ADDRESS_DEFAULT;
   document.getElementById('f_km').value='';
+  document.getElementById('f_pemeriksa').value='';
   window._closingTripId = null;
   buildChecklist(); buildDamageChips(); buildPhotoSlots(); resetTimeFields();
   setMode('keluar');
@@ -704,8 +763,7 @@ function blockText(label, blk){
     `Jam : ${blk.jam||'-'}\n`+
     `KM : ${blk.km||'-'}\n`+
     `Bensin : ${blk.bensin||'-'}\n`+
-    `Pemeriksa : ${blk.pemeriksa||'-'}\n`+
-    `Lokasi : ${blk.lokasi||'-'}\n`;
+    `Pemeriksa : ${blk.pemeriksa||'-'}\n`;
   if(exceptions.length) txt += `Catatan komponen : ${exceptions.join(', ')}\n`;
   if(blk.damage && blk.damage.length) txt += `Kondisi cat/body : ${blk.damage.join(', ')}\n`;
   if(blk.catatan) txt += `Catatan : ${blk.catatan}\n`;
@@ -713,7 +771,7 @@ function blockText(label, blk){
 }
 function buildReportText(t){
   let txt = `CHECKLIST KENDARAAN — BC CAMPANG RAYA\n`+
-    `Nopol : ${t.nopol}\nDept : ${t.dept}\nPemakai : ${t.pemakai}\nTelp : ${t.telp||'-'}\nKeperluan : ${t.keperluan||'-'}\n\n`;
+    `Nopol : ${t.nopol}\nDept : ${t.dept}\nPemakai : ${t.pemakai}\nKeperluan : ${t.keperluan||'-'}\n\n`;
   txt += blockText('Keluar', t.keluar);
   if(t.masuk) txt += '\n' + blockText('Masuk', t.masuk);
   else txt += '\nStatus: kendaraan masih di luar (belum checklist masuk)\n';
@@ -850,11 +908,11 @@ function initGeo(){
   }
 }
 window.addEventListener('DOMContentLoaded', ()=>{
+  buildVehicleSelect();
   buildChecklist();
   buildDamageChips();
   buildPhotoSlots();
   resetTimeFields();
-  document.getElementById('f_lokasi').value = SITE_ADDRESS_DEFAULT;
   initGeo();
   refreshIndex();
 });
