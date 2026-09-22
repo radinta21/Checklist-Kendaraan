@@ -421,7 +421,7 @@ try{
       "GANTI_DENGAN_URL_WEB_APP_APPS_SCRIPT".
    Selama nilainya masih diawali "GANTI", pencatatan ke spreadsheet
    otomatis dilewati (checklist tetap tersimpan seperti biasa). */
-const APPS_SCRIPT_URL = "GANTI_DENGAN_URL_WEB_APP_APPS_SCRIPT";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwRrX8zCyEIeM20ocuXFl0GZihFpnbBnxZb8Pj6ibw1doTokI1_xMO_2Yhq6FCtLvRw/exec";
 
 async function recordToSheet(mode, detail){
   if(!APPS_SCRIPT_URL || APPS_SCRIPT_URL.startsWith('GANTI_DENGAN')){
@@ -459,6 +459,35 @@ async function recordToSheet(mode, detail){
   }catch(err){
     console.error('Gagal mencatat ke spreadsheet', err);
     return {ok:false, error: (err && err.message) ? err.message : 'Tidak dapat menghubungi Apps Script.'};
+  }
+}
+
+/* Riwayat & detail trip sekarang dibaca langsung dari Spreadsheet lewat
+   Apps Script (action=list / action=detail) — tidak ada lagi penyimpanan
+   di localStorage HP. */
+function appsScriptConfigured(){
+  return !!(APPS_SCRIPT_URL && !APPS_SCRIPT_URL.startsWith('GANTI_DENGAN'));
+}
+async function fetchTripList(){
+  if(!appsScriptConfigured()) return [];
+  try{
+    const res = await fetch(APPS_SCRIPT_URL + '?action=list&limit=300');
+    const json = await res.json();
+    return (json && json.ok && Array.isArray(json.trips)) ? json.trips : [];
+  }catch(err){
+    console.error('Gagal memuat riwayat dari spreadsheet', err);
+    return null; // null = gagal terhubung, beda dari [] = memang kosong
+  }
+}
+async function fetchTripDetail(id){
+  if(!appsScriptConfigured()) return null;
+  try{
+    const res = await fetch(APPS_SCRIPT_URL + '?action=detail&id=' + encodeURIComponent(id));
+    const json = await res.json();
+    return (json && json.ok) ? json.trip : null;
+  }catch(err){
+    console.error('Gagal memuat detail dari spreadsheet', err);
+    return null;
   }
 }
 
@@ -658,7 +687,11 @@ function setSelectedNopol(nopol){
 async function populateOpenTrips(){
   const sel = document.getElementById('openTripSelect');
   sel.innerHTML = '<option value="">— Buat entri masuk manual (tanpa data keluar) —</option>';
-  await refreshIndex();
+  const list = await refreshIndex();
+  if(list === null){
+    toast('Gagal memuat data trip dari spreadsheet');
+    return;
+  }
   tripIndex.filter(t=>t.status==='keluar-only').forEach(t=>{
     const opt=document.createElement('option');
     opt.value=t.id;
@@ -669,7 +702,9 @@ async function populateOpenTrips(){
 async function onOpenTripChange(){
   const id = document.getElementById('openTripSelect').value;
   if(!id) return;
-  const detail = await getTripDetail(id);
+  // Data trip yang dipilih sudah ada di tripIndex (hasil refreshIndex),
+  // tidak perlu request tambahan ke spreadsheet.
+  const detail = tripIndex.find(t=>t.id===id) || await fetchTripDetail(id);
   if(!detail) return;
   setSelectedNopol(detail.nopol||'');
   document.getElementById('f_dept').value = detail.dept||'Arco';
@@ -678,55 +713,16 @@ async function onOpenTripChange(){
   window._closingTripId = id;
 }
 
-/* ---------- Storage helpers (Firestore, dengan fallback lokal per-HP) ---------- */
+/* ---------- Storage helpers ----------
+   Riwayat & detail trip 100% dibaca dari Google Spreadsheet lewat
+   Apps Script — tidak ada lagi data yang disimpan di localStorage HP.
+   Setiap "Simpan Checklist" langsung dikirim ke spreadsheet (recordToSheet),
+   dan itulah satu-satunya tempat datanya tersimpan. */
 async function refreshIndex(){
-  if(useFirebase){
-    try{
-      const snap = await db.collection('trips').orderBy('updatedAt','desc').limit(300).get();
-      tripIndex = snap.docs.map(d=>d.data());
-    }catch(err){ console.error('gagal memuat data dari Firestore', err); tripIndex = []; }
-  } else {
-    tripIndex = [];
-    for(let i=0;i<localStorage.length;i++){
-      const k = localStorage.key(i);
-      if(k && k.startsWith('trip-detail:')){
-        try{ tripIndex.push(JSON.parse(localStorage.getItem(k))); }catch(e){}
-      }
-    }
-    tripIndex.sort((a,b)=> new Date(b.updatedAt||0) - new Date(a.updatedAt||0));
-  }
-  return tripIndex;
+  const list = await fetchTripList();
+  tripIndex = list || [];
+  return list; // null jika gagal terhubung ke spreadsheet
 }
-async function getTripDetail(id){
-  if(useFirebase){
-    try{
-      const doc = await db.collection('trips').doc(id).get();
-      return doc.exists ? doc.data() : null;
-    }catch(err){ console.error(err); return null; }
-  } else {
-    try{ const raw = localStorage.getItem('trip-detail:'+id); return raw ? JSON.parse(raw) : null; }
-    catch(e){ return null; }
-  }
-}
-async function saveTripDetail(id, data){
-  if(useFirebase){
-    try{
-      await db.collection('trips').doc(id).set(data);
-      return {ok:true};
-    }catch(err){
-      console.error('gagal menyimpan ke Firestore', err);
-      return {ok:false, error: (err && err.message) ? err.message : 'Gagal menyimpan ke database.'};
-    }
-  } else {
-    try{
-      localStorage.setItem('trip-detail:'+id, JSON.stringify(data));
-      return {ok:true};
-    }catch(err){
-      return {ok:false, error: (err && err.message) ? err.message : 'Penyimpanan lokal penuh atau tidak tersedia.'};
-    }
-  }
-}
-
 
 function genId(){ return 't' + Date.now() + Math.random().toString(36).slice(2,7); }
 
@@ -760,62 +756,50 @@ async function submitTrip(){
   if(!pemeriksa){
     toast('Pilih nama security (pemeriksa)'); return;
   }
+  if(!appsScriptConfigured()){
+    toast('Apps Script belum terhubung — periksa APPS_SCRIPT_URL di kode.');
+    return;
+  }
   const btn = document.getElementById('btnSubmit');
   btn.disabled = true; btn.textContent = 'Menyimpan...';
 
-  await refreshIndex();
-  let id, detail;
+  const id = (mode==='masuk' && window._closingTripId) ? window._closingTripId : genId();
+  const detail = {
+    id, nopol,
+    dept: document.getElementById('f_dept').value,
+    pemakai,
+    keperluan: document.getElementById('f_keperluan').value
+  };
+  detail[mode] = collectLogBlock();
 
-  if(mode==='masuk' && window._closingTripId){
-    id = window._closingTripId;
-    detail = await getTripDetail(id);
-    if(!detail){ detail = {id, nopol, pemakai}; }
-    detail.masuk = collectLogBlock();
-    detail.status = 'selesai';
-  } else {
-    id = genId();
-    detail = {
-      id, nopol, dept: document.getElementById('f_dept').value,
-      pemakai, keperluan: document.getElementById('f_keperluan').value,
-      status: mode==='keluar' ? 'keluar-only' : 'masuk-only'
-    };
-    detail[mode] = collectLogBlock();
-  }
-  detail.nopol = nopol; detail.pemakai = pemakai;
-  detail.dept = document.getElementById('f_dept').value;
-  detail.keperluan = document.getElementById('f_keperluan').value;
-  detail.updatedAt = new Date().toISOString();
-
-  // Cek ukuran data sebelum menyimpan (dokumen Firestore dibatasi ~1MB,
-  // localStorage per-HP jauh lebih longgar)
-  const payload = JSON.stringify(detail);
-  const payloadLimit = useFirebase ? 900000 : 4500000;
-  if(payload.length > payloadLimit){
-    toast('Foto terlalu besar untuk disimpan — hapus 1-2 foto lalu coba lagi.');
+  // Batas kasar agar tidak mengirim payload yang tidak wajar besar
+  if(JSON.stringify(detail).length > 8000000){
+    toast('Foto terlalu besar untuk dikirim — hapus 1-2 foto lalu coba lagi.');
     btn.disabled=false; btn.textContent = mode==='keluar'?'Simpan Checklist Keluar':'Simpan Checklist Masuk';
     return;
   }
 
-  const result = await saveTripDetail(id, detail);
-  if(!result.ok){
-    toast('Gagal menyimpan: ' + result.error);
-    btn.disabled=false; btn.textContent = mode==='keluar'?'Simpan Checklist Keluar':'Simpan Checklist Masuk';
-    return;
-  }
-
-  // Catat juga ke Google Spreadsheet (lihat code.gs) — tidak menghambat
-  // penyimpanan lokal jika koneksi/skrip bermasalah.
   const sheetResult = await recordToSheet(mode, detail);
-
   btn.disabled=false;
-  if(sheetResult.skipped){
-    toast('Checklist tersimpan');
-  } else if(sheetResult.ok){
-    toast('Checklist tersimpan & tercatat di spreadsheet');
-  } else {
-    toast('Tersimpan, tapi gagal mencatat ke spreadsheet: ' + (sheetResult.error||'-'));
+  if(!sheetResult.ok){
+    toast('Gagal mencatat ke spreadsheet: ' + (sheetResult.error||'Periksa koneksi internet.'));
+    btn.textContent = mode==='keluar'?'Simpan Checklist Keluar':'Simpan Checklist Masuk';
+    return;
   }
-  showReportModal(detail);
+
+  toast('Checklist tersimpan ke spreadsheet');
+
+  // Jika ini menutup trip (masuk atas trip yang sudah keluar), ambil
+  // detail gabungan dari spreadsheet supaya laporan menampilkan Keluar +
+  // Masuk sekaligus — foto Masuk yang baru diambil tetap pakai versi asli
+  // (base64) di HP supaya bisa langsung dibagikan/diunduh.
+  let modalDetail = detail;
+  if(mode==='masuk' && id === window._closingTripId){
+    const merged = await fetchTripDetail(id);
+    if(merged){ merged.masuk = detail.masuk; modalDetail = merged; }
+  }
+
+  showReportModal(modalDetail);
   resetForm();
 }
 
@@ -835,14 +819,16 @@ function resetForm(){
 /* ---------- Report text ---------- */
 function blockText(label, blk){
   if(!blk) return '';
-  let exceptions = Object.entries(blk.checklist||{}).filter(([k,v])=>v!=='B').map(([k,v])=>`${k}: ${v}`);
+  let exceptionsText = (typeof blk.checklistText === 'string')
+    ? blk.checklistText
+    : Object.entries(blk.checklist||{}).filter(([k,v])=>v!=='B').map(([k,v])=>`${k}: ${v}`).join(', ');
   let txt = `Pemakaian Kendaraan (${label})\n`+
     `Tanggal : ${fmtDateID(blk.tanggal)}\n`+
     `Jam : ${blk.jam||'-'}\n`+
     `KM : ${blk.km||'-'}\n`+
     `Bensin : ${blk.bensin||'-'}\n`+
     `Pemeriksa : ${blk.pemeriksa||'-'}\n`;
-  if(exceptions.length) txt += `Catatan komponen : ${exceptions.join(', ')}\n`;
+  if(exceptionsText) txt += `Catatan komponen : ${exceptionsText}\n`;
   if(blk.damage && blk.damage.length) txt += `Kondisi cat/body : ${blk.damage.join(', ')}\n`;
   if(blk.catatan) txt += `Catatan : ${blk.catatan}\n`;
   return txt;
@@ -862,7 +848,7 @@ function showReportModal(trip){
   modalTrip = trip;
   const overlay=document.createElement('div');
   overlay.className='modal-overlay'; overlay.id='reportModal';
-  const allPhotos = {...(trip.keluar?.photos||{}), ...(trip.masuk?.photos||{})};
+  const allPhotos = getAllPhotos(trip);
   const thumbsHtml = Object.values(allPhotos).map(src=>`<img src="${src}" style="width:56px;height:56px;object-fit:cover;border-radius:6px;border:1px solid var(--line);margin:2px;">`).join('');
   overlay.innerHTML = `
     <div class="modal">
@@ -894,6 +880,12 @@ function shareWhatsappText(){
   const text = buildReportText(modalTrip);
   window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
 }
+function getAllPhotos(trip){
+  const merged = {...(trip.keluar?.photos||{}), ...(trip.masuk?.photos||{})};
+  const out = {};
+  Object.entries(merged).forEach(([k,v])=>{ if(v) out[k]=v; });
+  return out;
+}
 function dataURLtoFile(dataUrl, filename){
   const arr = dataUrl.split(',');
   const mime = arr[0].match(/:(.*?);/)[1];
@@ -904,36 +896,60 @@ function dataURLtoFile(dataUrl, filename){
 }
 async function shareNative(){
   const text = buildReportText(modalTrip);
-  const allPhotos = {...(modalTrip.keluar?.photos||{}), ...(modalTrip.masuk?.photos||{})};
-  const files = Object.entries(allPhotos).map(([k,src])=>dataURLtoFile(src, k+'.jpg'));
+  const allPhotos = getAllPhotos(modalTrip);
+  const entries = Object.entries(allPhotos);
+  // Foto dari spreadsheet berupa link Google Drive (bukan base64), jadi
+  // tidak semuanya bisa dilampirkan sebagai file langsung — foto yang
+  // baru diambil di HP ini (base64) tetap dilampirkan sebagai file.
+  const localEntries = entries.filter(([,src])=>src.startsWith('data:'));
+  const remoteEntries = entries.filter(([,src])=>!src.startsWith('data:'));
+  const files = localEntries.map(([k,src])=>dataURLtoFile(src, k+'.jpg'));
+  const fullText = remoteEntries.length
+    ? text + '\nLink foto:\n' + remoteEntries.map(([k,src])=>`${k}: ${src}`).join('\n')
+    : text;
   try{
-    if(navigator.canShare && navigator.canShare({files}) ){
-      await navigator.share({text, files, title:'Laporan Pemakaian Kendaraan'});
+    if(files.length && navigator.canShare && navigator.canShare({files}) ){
+      await navigator.share({text: fullText, files, title:'Laporan Pemakaian Kendaraan'});
     } else if(navigator.share){
-      await navigator.share({text, title:'Laporan Pemakaian Kendaraan'});
+      await navigator.share({text: fullText, title:'Laporan Pemakaian Kendaraan'});
     } else {
       toast('Perangkat ini tidak mendukung berbagi langsung — gunakan tombol Gmail/WhatsApp.');
     }
   }catch(err){ /* user cancelled share sheet — ignore */ }
 }
 function downloadAllPhotos(){
-  const allPhotos = {...(modalTrip.keluar?.photos||{}), ...(modalTrip.masuk?.photos||{})};
+  const allPhotos = getAllPhotos(modalTrip);
   const entries = Object.entries(allPhotos);
   if(!entries.length){ toast('Tidak ada foto untuk diunduh'); return; }
   entries.forEach(([k,src],i)=>{
     setTimeout(()=>{
-      const a=document.createElement('a');
-      a.href=src; a.download = `${modalTrip.nopol}_${k}.jpg`;
-      document.body.appendChild(a); a.click(); a.remove();
+      if(src.startsWith('data:')){
+        const a=document.createElement('a');
+        a.href=src; a.download = `${modalTrip.nopol}_${k}.jpg`;
+        document.body.appendChild(a); a.click(); a.remove();
+      } else {
+        // Link Google Drive lintas-origin — browser tidak bisa memaksa
+        // unduh langsung, jadi dibuka di tab baru untuk disimpan manual.
+        window.open(src, '_blank');
+      }
     }, i*300);
   });
 }
 
 /* ---------- History view ---------- */
 async function renderHistory(){
-  await refreshIndex();
-  const q = (document.getElementById('searchInput').value||'').toLowerCase();
   const list = document.getElementById('historyList');
+  if(!appsScriptConfigured()){
+    list.innerHTML = `<div class="empty-state"><div class="ic">⚠️</div>Apps Script belum terhubung — riwayat tidak dapat dimuat dari spreadsheet.</div>`;
+    return;
+  }
+  list.innerHTML = `<div class="empty-state"><div class="ic">⏳</div>Memuat riwayat dari spreadsheet…</div>`;
+  const fetched = await refreshIndex();
+  if(fetched === null){
+    list.innerHTML = `<div class="empty-state"><div class="ic">⚠️</div>Gagal memuat riwayat — periksa koneksi internet, lalu coba lagi.</div>`;
+    return;
+  }
+  const q = (document.getElementById('searchInput').value||'').toLowerCase();
   let items = [...tripIndex].sort((a,b)=> new Date(b.updatedAt) - new Date(a.updatedAt));
   if(q) items = items.filter(t => (t.nopol+' '+t.pemakai+' '+t.dept).toLowerCase().includes(q));
   if(!items.length){
@@ -942,7 +958,7 @@ async function renderHistory(){
   }
   list.innerHTML = items.map(t=>{
     const isOpen = t.status==='keluar-only';
-    const allPhotos = Object.values({...(t.keluar?.photos||{}), ...(t.masuk?.photos||{})}).slice(0,3);
+    const allPhotos = Object.values(getAllPhotos(t)).slice(0,3);
     const thumbs = allPhotos.map(src=>`<img src="${src}">`).join('');
     return `
       <div class="trip-card" onclick="openDetail('${t.id}')">
@@ -962,8 +978,8 @@ async function renderHistory(){
   }).join('');
 }
 async function openDetail(id){
-  const detail = await getTripDetail(id);
-  if(!detail) return;
+  const detail = await fetchTripDetail(id);
+  if(!detail){ toast('Gagal memuat detail dari spreadsheet'); return; }
   showReportModal(detail);
 }
 
@@ -989,12 +1005,12 @@ function initGeo(){
 function applyConnectionStatus(){
   const pill = document.getElementById('statusPill');
   const note = document.getElementById('modeNote');
-  if(useFirebase){
-    pill.textContent = '● tersambung';
+  if(appsScriptConfigured()){
+    pill.textContent = '● tersambung ke spreadsheet';
   } else {
-    pill.textContent = '● mode lokal';
+    pill.textContent = '● belum tersambung';
     note.classList.add('warn');
-    note.innerHTML = '⚠️ Belum tersambung ke database bersama (Firebase belum dikonfigurasi). Data saat ini hanya tersimpan di HP ini dan <b>tidak</b> terlihat oleh security/admin lain. Hubungi admin untuk memasang konfigurasi Firebase.';
+    note.innerHTML = '⚠️ APPS_SCRIPT_URL belum diisi dengan URL Web App yang valid. Checklist <b>tidak akan tercatat</b> ke spreadsheet sampai ini diperbaiki. Lihat komentar "KONFIGURASI GOOGLE APPS SCRIPT" di kode.';
   }
 }
 window.addEventListener('DOMContentLoaded', ()=>{
