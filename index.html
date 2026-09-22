@@ -183,6 +183,11 @@ button{font-family:var(--font-body);}
 .navbtn.active{color:var(--keluar);}
 
 /* ---------- History ---------- */
+.history-date-header{
+  font-family:var(--font-mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-soft);margin:22px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--line);
+}
+.history-date-header:first-child{margin-top:0;}
 .trip-card{
   background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
   padding:14px;margin-bottom:10px;cursor:pointer;
@@ -493,6 +498,15 @@ async function fetchTripDetail(id){
 
 const EMAIL_TO = "jatra_radinta@biznetnetworks.com";
 const SITE_LABEL = "BC Campang Raya - Jalan Tembesu 4";
+// Baris alamat untuk stempel foto, mengikuti format contoh (jalan, area,
+// kecamatan, kota, provinsi) — sesuaikan jika lokasi berbeda.
+const SITE_ADDRESS_LINES = [
+  "21a Jalan Tembesu 4",
+  "Campang Raya",
+  "Kecamatan Sukabumi",
+  "Kota Bandar Lampung",
+  "Lampung"
+];
 const VEHICLES = [
   { nopol: "BE1058ABF", label: "Xenia 1.3 MT 2026 (BE1058ABF)" },
   { nopol: "BE1350AAL", label: "Gran Max 1.5 MT 2022 (BE1350AAL)" }
@@ -527,13 +541,58 @@ function toast(msg){
 function pad(n){return n.toString().padStart(2,'0');}
 function nowDate(){const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
 function nowTime(){const d=new Date();return pad(d.getHours())+':'+pad(d.getMinutes());}
+/* Google Spreadsheet kadang otomatis mengubah nilai teks "2026-09-22" atau
+   "14:05" menjadi tipe Tanggal/Jam aslinya, yang lalu terbaca balik sebagai
+   string ISO panjang ("2026-09-22T00:00:00.000Z" / "1899-12-30T07:05:00.000Z").
+   Dua fungsi berikut membersihkan itu supaya tetap tampil benar walau
+   sumber datanya sudah "rusak" seperti itu. */
+function cleanDateValue(v){
+  if(!v) return '';
+  const s = String(v);
+  return s.includes('T') ? s.split('T')[0] : s;
+}
+function cleanTimeValue(v){
+  if(!v) return '';
+  const s = String(v);
+  const m = s.match(/T(\d{2}):(\d{2})/);
+  return m ? (m[1]+':'+m[2]) : s;
+}
 function fmtDateID(iso){
+  iso = cleanDateValue(iso);
   if(!iso) return '-';
   const days=['Minggu','Senin','Selasa','Rabu','Kamis',"Jumat",'Sabtu'];
   const months=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
   const [y,m,d]=iso.split('-').map(Number);
   const dt=new Date(y,m-1,d);
+  if(isNaN(dt.getTime())) return iso;
   return days[dt.getDay()]+', '+d+' '+months[m-1]+' '+y;
+}
+function fmtDateIDShort(iso){
+  iso = cleanDateValue(iso);
+  if(!iso) return '-';
+  const days=['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+  const months=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  const [y,m,d]=iso.split('-').map(Number);
+  const dt=new Date(y,m-1,d);
+  if(isNaN(dt.getTime())) return iso;
+  return days[dt.getDay()]+', '+d+' '+months[m-1]+' '+y;
+}
+/* Memecah teks jadi beberapa baris agar tidak terpotong di tepi kanvas. */
+function wrapCanvasText(ctx, text, maxWidth){
+  const words = String(text).split(' ');
+  const lines = [];
+  let current = '';
+  words.forEach(word=>{
+    const test = current ? current+' '+word : word;
+    if(current && ctx.measureText(test).width > maxWidth){
+      lines.push(current);
+      current = word;
+    } else {
+      current = test;
+    }
+  });
+  if(current) lines.push(current);
+  return lines;
 }
 
 /* ---------- Init form pieces ---------- */
@@ -609,20 +668,33 @@ function onPhotoChosen(key, input){
       ctx.imageSmoothingQuality='high';
       ctx.drawImage(img,0,0,canvas.width,canvas.height);
 
-      // stamp overlay
-      const barH = Math.max(40, canvas.height*0.13);
+      // ---- Stempel geotag: multi-baris, dibungkus otomatis agar tidak
+      // terpotong di tepi foto (format mengikuti contoh: tanggal/jam,
+      // lalu alamat baris per baris, lalu koordinat). ----
+      const stampDate = document.getElementById('f_tanggal').value || nowDate();
+      const stampTime = document.getElementById('f_jam').value || nowTime();
+      const dateLine = fmtDateIDShort(stampDate)+'  '+stampTime;
+      const rawLines = [dateLine, ...SITE_ADDRESS_LINES];
+      if(geo) rawLines.push(`${geo.lat.toFixed(5)}, ${geo.lng.toFixed(5)}`);
+
+      const fs = Math.max(11, canvas.width*0.028);
+      const lineGap = fs*1.32;
+      const padX = Math.max(10, canvas.width*0.02);
+      const padTop = fs*0.85;
+
+      ctx.font = fs+'px monospace';
+      const maxTextWidth = canvas.width - padX*2;
+      let lines = [];
+      rawLines.forEach(raw=>{ lines = lines.concat(wrapCanvasText(ctx, raw, maxTextWidth)); });
+
+      const barH = padTop*2 + lines.length*lineGap;
       ctx.fillStyle='rgba(20,24,18,0.72)';
       ctx.fillRect(0, canvas.height-barH, canvas.width, barH);
       ctx.fillStyle='#EFEEE7';
-      const fs = Math.max(10, canvas.width*0.032);
       ctx.font = fs+'px monospace';
-      const stampDate = document.getElementById('f_tanggal').value || nowDate();
-      const stampTime = document.getElementById('f_jam').value || nowTime();
-      let line1 = fmtDateID(stampDate)+'  '+stampTime;
-      let line2 = SITE_LABEL;
-      if(geo) line2 += `  (${geo.lat.toFixed(5)}, ${geo.lng.toFixed(5)})`;
-      ctx.fillText(line1, 8, canvas.height-barH+fs+4);
-      ctx.fillText(line2, 8, canvas.height-barH+fs*2+8);
+      lines.forEach((ln,i)=>{
+        ctx.fillText(ln, padX, canvas.height-barH+padTop+(i+1)*lineGap-lineGap*0.28);
+      });
 
       const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
       currentPhotos[key] = dataUrl;
@@ -824,7 +896,7 @@ function blockText(label, blk){
     : Object.entries(blk.checklist||{}).filter(([k,v])=>v!=='B').map(([k,v])=>`${k}: ${v}`).join(', ');
   let txt = `Pemakaian Kendaraan (${label})\n`+
     `Tanggal : ${fmtDateID(blk.tanggal)}\n`+
-    `Jam : ${blk.jam||'-'}\n`+
+    `Jam : ${cleanTimeValue(blk.jam)||'-'}\n`+
     `KM : ${blk.km||'-'}\n`+
     `Bensin : ${blk.bensin||'-'}\n`+
     `Pemeriksa : ${blk.pemeriksa||'-'}\n`;
@@ -956,11 +1028,18 @@ async function renderHistory(){
     list.innerHTML = `<div class="empty-state"><div class="ic">🗂️</div>Belum ada riwayat checklist.</div>`;
     return;
   }
-  list.innerHTML = items.map(t=>{
+  let lastDateKey = null;
+  const cardsHtml = items.map(t=>{
     const isOpen = t.status==='keluar-only';
     const allPhotos = Object.values(getAllPhotos(t)).slice(0,3);
     const thumbs = allPhotos.map(src=>`<img src="${src}">`).join('');
-    return `
+    const groupDate = cleanDateValue(t.keluar?.tanggal || t.masuk?.tanggal || t.updatedAt);
+    let headerHtml = '';
+    if(groupDate !== lastDateKey){
+      lastDateKey = groupDate;
+      headerHtml = `<div class="history-date-header">${fmtDateID(groupDate)}</div>`;
+    }
+    return headerHtml + `
       <div class="trip-card" onclick="openDetail('${t.id}')">
         <div class="top">
           <div>
@@ -970,12 +1049,13 @@ async function renderHistory(){
           <span class="stamp-badge ${isOpen?'open':'closed'}">${isOpen?'KELUAR':'SELESAI'}</span>
         </div>
         <div class="meta">
-          <span>Keluar: ${t.keluar?fmtDateID(t.keluar.tanggal)+' '+t.keluar.jam:'-'}</span>
-          <span>Masuk: ${t.masuk?fmtDateID(t.masuk.tanggal)+' '+t.masuk.jam:'-'}</span>
+          <span>Keluar: ${t.keluar?fmtDateID(t.keluar.tanggal)+' '+cleanTimeValue(t.keluar.jam):'-'}</span>
+          <span>Masuk: ${t.masuk?fmtDateID(t.masuk.tanggal)+' '+cleanTimeValue(t.masuk.jam):'-'}</span>
         </div>
         ${thumbs?`<div class="trip-thumbs">${thumbs}</div>`:''}
       </div>`;
   }).join('');
+  list.innerHTML = cardsHtml;
 }
 async function openDetail(id){
   const detail = await fetchTripDetail(id);
