@@ -750,7 +750,11 @@ function onPhotoChosen(key, input){
 
       // ---- Stempel geotag: multi-baris, dibungkus otomatis agar tidak
       // terpotong di tepi foto (format mengikuti contoh: tanggal/jam,
-      // lalu alamat baris per baris, lalu koordinat). ----
+      // lalu alamat baris per baris, lalu koordinat).
+      // Sengaja TANPA kotak/bar latar belakang, supaya tidak menutupi
+      // detail foto (misal lecet/kerusakan) di area itu — teksnya sendiri
+      // diberi garis tepi gelap (stroke) supaya tetap terbaca di atas
+      // foto apa pun tanpa perlu latar solid. ----
       const stampDate = document.getElementById('f_tanggal').value || nowDate();
       const stampTime = document.getElementById('f_jam').value || nowTime();
       const dateLine = fmtDateIDShort(stampDate)+'  '+stampTime;
@@ -760,20 +764,23 @@ function onPhotoChosen(key, input){
       const fs = Math.max(11, canvas.width*0.028);
       const lineGap = fs*1.32;
       const padX = Math.max(10, canvas.width*0.02);
-      const padTop = fs*0.85;
+      const padBottom = fs*0.85;
 
       ctx.font = fs+'px monospace';
       const maxTextWidth = canvas.width - padX*2;
       let lines = [];
       rawLines.forEach(raw=>{ lines = lines.concat(wrapCanvasText(ctx, raw, maxTextWidth)); });
 
-      const barH = padTop*2 + lines.length*lineGap;
-      ctx.fillStyle='rgba(20,24,18,0.72)';
-      ctx.fillRect(0, canvas.height-barH, canvas.width, barH);
-      ctx.fillStyle='#EFEEE7';
+      const blockH = lines.length*lineGap;
       ctx.font = fs+'px monospace';
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = Math.max(2, fs*0.22);
+      ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+      ctx.fillStyle = '#FFFFFF';
       lines.forEach((ln,i)=>{
-        ctx.fillText(ln, padX, canvas.height-barH+padTop+(i+1)*lineGap-lineGap*0.28);
+        const y = canvas.height - padBottom - blockH + (i+1)*lineGap - lineGap*0.28;
+        ctx.strokeText(ln, padX, y);
+        ctx.fillText(ln, padX, y);
       });
 
       const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
@@ -1084,17 +1091,15 @@ async function shareNative(){
   // Foto dari spreadsheet berupa link Google Drive (bukan base64), jadi
   // tidak semuanya bisa dilampirkan sebagai file langsung — foto yang
   // baru diambil di HP ini (base64) tetap dilampirkan sebagai file.
+  // Link foto TIDAK disertakan di teks laporan (sengaja dihapus agar
+  // laporan tetap ringkas) — foto tetap terlampir sebagai file bila ada.
   const localEntries = entries.filter(([,src])=>src.startsWith('data:'));
-  const remoteEntries = entries.filter(([,src])=>!src.startsWith('data:'));
   const files = localEntries.map(([k,src])=>dataURLtoFile(src, k+'.jpg'));
-  const fullText = remoteEntries.length
-    ? text + '\nLink foto:\n' + remoteEntries.map(([k,src])=>`${k}: ${src}`).join('\n')
-    : text;
   try{
     if(files.length && navigator.canShare && navigator.canShare({files}) ){
-      await navigator.share({text: fullText, files, title:'Laporan Pemakaian Kendaraan'});
+      await navigator.share({text, files, title:'Laporan Pemakaian Kendaraan'});
     } else if(navigator.share){
-      await navigator.share({text: fullText, title:'Laporan Pemakaian Kendaraan'});
+      await navigator.share({text, title:'Laporan Pemakaian Kendaraan'});
     } else {
       toast('Perangkat ini tidak mendukung berbagi langsung — gunakan tombol Gmail/WhatsApp.');
     }
