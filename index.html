@@ -153,6 +153,25 @@ button{font-family:var(--font-body);}
   position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);color:#fff;border:none;
   width:22px;height:22px;border-radius:50%;font-size:12px;cursor:pointer;z-index:2;
 }
+.broken{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  background:var(--surface-2);color:var(--ink-soft);
+  font-size:10px;text-align:center;padding:0 4px;text-decoration:none;
+  border-radius:6px;flex:none;
+}
+.broken .ic{font-size:16px;}
+.photo-slot .broken{
+  width:100%;height:100%;position:absolute;inset:0;border-radius:0;gap:4px;font-size:11px;padding:0 8px;
+}
+.photo-slot .broken .ic{font-size:18px;}
+
+/* ---------- Photo tabs (Form Masuk) ---------- */
+.photo-tabs{display:none;gap:8px;margin-bottom:10px;}
+.photo-tab{
+  flex:1;border:1.5px solid var(--line);background:var(--surface-2);border-radius:8px;
+  padding:9px 6px;font-size:12.5px;color:var(--ink-soft);cursor:pointer;font-weight:600;
+}
+.photo-tab.active{background:var(--masuk-soft);border-color:var(--masuk);color:var(--masuk);}
 
 /* ---------- Buttons ---------- */
 .btn{
@@ -367,6 +386,10 @@ button{font-family:var(--font-body);}
 
     <div class="card">
       <div class="section-title">Foto</div>
+      <div class="photo-tabs" id="photoTabs">
+        <button type="button" class="photo-tab active" data-tab="exterior" onclick="switchPhotoTab('exterior')">Foto Exterior</button>
+        <button type="button" class="photo-tab" data-tab="interior" onclick="switchPhotoTab('interior')">Foto Interior</button>
+      </div>
       <div class="photo-grid" id="photoGrid"></div>
     </div>
 
@@ -473,10 +496,24 @@ async function recordToSheet(mode, detail){
 function appsScriptConfigured(){
   return !!(APPS_SCRIPT_URL && !APPS_SCRIPT_URL.startsWith('GANTI_DENGAN'));
 }
+/* Apps Script kadang lambat merespons (spreadsheet besar / koneksi
+   lambat). Tanpa batas waktu, fetch bisa "menggantung" lama sebelum
+   akhirnya gagal, terasa seperti aplikasi macet. FETCH_TIMEOUT_MS
+   membatasi ini supaya pesan error muncul cepat dan jelas. */
+const FETCH_TIMEOUT_MS = 15000;
+async function fetchWithTimeout_(url, options){
+  const controller = new AbortController();
+  const timer = setTimeout(()=>controller.abort(), FETCH_TIMEOUT_MS);
+  try{
+    return await fetch(url, {...(options||{}), signal: controller.signal});
+  } finally {
+    clearTimeout(timer);
+  }
+}
 async function fetchTripList(){
   if(!appsScriptConfigured()) return [];
   try{
-    const res = await fetch(APPS_SCRIPT_URL + '?action=list&limit=300');
+    const res = await fetchWithTimeout_(APPS_SCRIPT_URL + '?action=list&limit=300');
     const json = await res.json();
     return (json && json.ok && Array.isArray(json.trips)) ? json.trips : [];
   }catch(err){
@@ -487,7 +524,7 @@ async function fetchTripList(){
 async function fetchTripDetail(id){
   if(!appsScriptConfigured()) return null;
   try{
-    const res = await fetch(APPS_SCRIPT_URL + '?action=detail&id=' + encodeURIComponent(id));
+    const res = await fetchWithTimeout_(APPS_SCRIPT_URL + '?action=detail&id=' + encodeURIComponent(id));
     const json = await res.json();
     return (json && json.ok) ? json.trip : null;
   }catch(err){
@@ -517,12 +554,32 @@ const KOMPONEN = [
   "Antena","Emblem/Stiker","Lampu Depan","Lampu Belakang","Lampu Spion","Apar"
 ];
 const DAMAGE_TYPES = ["Baret","Penyok","Retak","Pecah"];
-const PHOTO_SLOTS = [
+// Checklist Keluar: 4 foto dalam satu grid (tanpa tab).
+const PHOTO_SLOTS_KELUAR = [
   {key:"interior", label:"Interior / Dashboard"},
   {key:"km", label:"Odometer / KM"},
   {key:"depan", label:"Tampak Depan"},
   {key:"belakang", label:"Tampak Belakang"}
 ];
+// Checklist Masuk: foto lebih lengkap, dibagi 2 tab (Exterior & Interior).
+const PHOTO_TABS_MASUK = {
+  exterior: [
+    {key:"depan", label:"Tampak Depan"},
+    {key:"belakang", label:"Tampak Belakang"},
+    {key:"kanan", label:"Sisi Kanan"},
+    {key:"kiri", label:"Sisi Kiri"}
+  ],
+  interior: [
+    {key:"km", label:"Odometer / KM"},
+    {key:"barisDepan", label:"Baris Depan"},
+    {key:"barisTengah", label:"Baris Tengah"}
+  ]
+};
+// Semua slot foto yang mungkin dipakai — dipakai untuk lookup label
+// (misal saat menampilkan riwayat) tanpa peduli mode/tab.
+const ALL_PHOTO_SLOTS = [...PHOTO_SLOTS_KELUAR, ...PHOTO_TABS_MASUK.exterior, ...PHOTO_TABS_MASUK.interior]
+  .reduce((acc,s)=>{ acc[s.key]=s.label; return acc; }, {});
+let activePhotoTab = 'exterior';
 
 let mode = "keluar";
 let currentPhotos = {};
@@ -635,21 +692,44 @@ function buildDamageChips(){
   });
 }
 
+function currentPhotoSlotList(){
+  return mode==='masuk' ? PHOTO_TABS_MASUK[activePhotoTab] : PHOTO_SLOTS_KELUAR;
+}
+// Dipanggil saat mode berganti (Keluar/Masuk) atau form direset: mengosongkan
+// foto yang sudah diambil dan menampilkan grid slot yang sesuai mode.
 function buildPhotoSlots(){
+  currentPhotos = {};
+  activePhotoTab = 'exterior';
+  document.getElementById('photoTabs').style.display = mode==='masuk' ? 'flex' : 'none';
+  document.querySelectorAll('.photo-tab').forEach(b=>b.classList.toggle('active', b.dataset.tab==='exterior'));
+  renderPhotoGrid();
+}
+// Menggambar ulang grid untuk tab/slot yang sedang aktif TANPA menghapus
+// foto yang sudah diambil di tab lain (currentPhotos tetap dipertahankan).
+function renderPhotoGrid(){
   const grid=document.getElementById('photoGrid');
   grid.innerHTML='';
-  currentPhotos = {};
-  PHOTO_SLOTS.forEach(slot=>{
+  currentPhotoSlotList().forEach(slot=>{
     const div=document.createElement('div');
     div.className='photo-slot';
     div.id='slot_'+slot.key;
-    div.innerHTML = `
-      <span class="plus">＋</span>
-      <span class="cap">${slot.label}</span>
-      <input type="file" accept="image/*" capture="environment" onchange="onPhotoChosen('${slot.key}', this)">`;
+    if(currentPhotos[slot.key]){
+      div.innerHTML = `<img src="${currentPhotos[slot.key]}"><button type="button" class="remove" onclick="removePhoto(event,'${slot.key}')">✕</button>
+        <input type="file" accept="image/*" capture="environment" onchange="onPhotoChosen('${slot.key}', this)">`;
+    } else {
+      div.innerHTML = `
+        <span class="plus">＋</span>
+        <span class="cap">${slot.label}</span>
+        <input type="file" accept="image/*" capture="environment" onchange="onPhotoChosen('${slot.key}', this)">`;
+    }
     div.onclick = (e)=>{ if(e.target.tagName!=='BUTTON') div.querySelector('input').click(); };
     grid.appendChild(div);
   });
+}
+function switchPhotoTab(tab){
+  activePhotoTab = tab;
+  document.querySelectorAll('.photo-tab').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+  renderPhotoGrid();
 }
 
 function onPhotoChosen(key, input){
@@ -709,9 +789,10 @@ function onPhotoChosen(key, input){
 function removePhoto(e,key){
   e.stopPropagation();
   delete currentPhotos[key];
-  const slot = PHOTO_SLOTS.find(s=>s.key===key);
+  const label = ALL_PHOTO_SLOTS[key] || '';
   const div=document.getElementById('slot_'+key);
-  div.innerHTML = `<span class="plus">＋</span><span class="cap">${slot.label}</span>
+  if(!div) return;
+  div.innerHTML = `<span class="plus">＋</span><span class="cap">${label}</span>
     <input type="file" accept="image/*" capture="environment" onchange="onPhotoChosen('${key}', this)">`;
 }
 
@@ -724,8 +805,11 @@ function setMode(m){
   document.getElementById('logSectionTitle').textContent = 'Data Log — ' + (m==='keluar'?'Keluar':'Masuk');
   document.getElementById('btnSubmit').className = 'btn ' + (m==='keluar'?'keluar':'masuk');
   document.getElementById('btnSubmit').textContent = m==='keluar' ? 'Simpan Checklist Keluar' : 'Simpan Checklist Masuk';
-  if(m==='masuk') populateOpenTrips();
+  buildPhotoSlots();
+  let populatePromise = Promise.resolve();
+  if(m==='masuk') populatePromise = populateOpenTrips();
   resetTimeFields();
+  return populatePromise;
 }
 function resetTimeFields(){
   document.getElementById('f_tanggal').value = nowDate();
@@ -790,9 +874,20 @@ async function onOpenTripChange(){
    Apps Script — tidak ada lagi data yang disimpan di localStorage HP.
    Setiap "Simpan Checklist" langsung dikirim ke spreadsheet (recordToSheet),
    dan itulah satu-satunya tempat datanya tersimpan. */
-async function refreshIndex(){
+/* Sebelumnya setiap pindah ke mode "Masuk" (untuk mengisi dropdown trip
+   yang masih keluar) memicu fetch penuh ke spreadsheet — ini salah satu
+   penyebab riwayat/aplikasi terasa lambat kalau dilakukan berulang kali
+   dalam waktu singkat. INDEX_CACHE_MS memberi jeda: dalam rentang waktu
+   ini, data yang sudah ada di memori dipakai ulang tanpa fetch baru.
+   Buka tab Riwayat selalu memaksa fetch terbaru (force=true) supaya data
+   yang ditampilkan tetap yang paling baru. */
+const INDEX_CACHE_MS = 20000;
+let lastIndexFetchAt = 0;
+async function refreshIndex(force){
+  const fresh = !force && tripIndex.length && (Date.now() - lastIndexFetchAt) < INDEX_CACHE_MS;
+  if(fresh) return tripIndex;
   const list = await fetchTripList();
-  tripIndex = list || [];
+  if(list !== null){ tripIndex = list; lastIndexFetchAt = Date.now(); }
   return list; // null jika gagal terhubung ke spreadsheet
 }
 
@@ -921,7 +1016,7 @@ function showReportModal(trip){
   const overlay=document.createElement('div');
   overlay.className='modal-overlay'; overlay.id='reportModal';
   const allPhotos = getAllPhotos(trip);
-  const thumbsHtml = Object.values(allPhotos).map(src=>`<img src="${src}" style="width:56px;height:56px;object-fit:cover;border-radius:6px;border:1px solid var(--line);margin:2px;">`).join('');
+  const thumbsHtml = Object.values(allPhotos).map(src=>`<img src="${src}" style="width:56px;height:56px;object-fit:cover;border-radius:6px;border:1px solid var(--line);margin:2px;" onerror="markPhotoBroken_(this,'${src}',56)">`).join('');
   overlay.innerHTML = `
     <div class="modal">
       <button class="close" onclick="closeModal()">✕</button>
@@ -929,6 +1024,7 @@ function showReportModal(trip){
       <div class="report-box" id="reportBoxText">${buildReportText(trip)}</div>
       <div style="display:flex;flex-wrap:wrap;margin-top:10px;">${thumbsHtml}</div>
       <div class="btn-row">
+        ${!trip.masuk?`<button class="btn masuk" onclick="startChecklistMasuk(modalTrip)">✅ Isi Checklist Masuk untuk Trip Ini</button>`:''}
         <button class="btn keluar" onclick="sendGmail()">📧 Kirim ke Email (Gmail) — ${EMAIL_TO}</button>
         <button class="btn secondary" onclick="shareNative()">🖼️ Bagikan dengan Foto (WhatsApp / Email / Lainnya)</button>
         <button class="btn secondary" onclick="shareWhatsappText()">💬 Bagikan Teks ke WhatsApp</button>
@@ -951,6 +1047,21 @@ function sendGmail(){
 function shareWhatsappText(){
   const text = buildReportText(modalTrip);
   window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+}
+/* Kalau foto dari Drive gagal dimuat (koneksi lambat/terputus, dsb),
+   tampilkan kotak "buka foto" yang tetap bisa ditap untuk membuka link
+   aslinya di tab baru — daripada ikon gambar rusak yang tidak bisa
+   diapa-apakan. */
+function markPhotoBroken_(imgEl, url, size){
+  if(!imgEl || !imgEl.parentElement) return;
+  const wrap = document.createElement('a');
+  wrap.href = url; wrap.target = '_blank'; wrap.rel = 'noopener';
+  wrap.className = 'broken';
+  wrap.style.width = (size||44)+'px';
+  wrap.style.height = (size||44)+'px';
+  wrap.onclick = (e)=>e.stopPropagation();
+  wrap.innerHTML = '<span class="ic">🖼️</span><span>Buka</span>';
+  imgEl.replaceWith(wrap);
 }
 function getAllPhotos(trip){
   const merged = {...(trip.keluar?.photos||{}), ...(trip.masuk?.photos||{})};
@@ -1016,7 +1127,7 @@ async function renderHistory(){
     return;
   }
   list.innerHTML = `<div class="empty-state"><div class="ic">⏳</div>Memuat riwayat dari spreadsheet…</div>`;
-  const fetched = await refreshIndex();
+  const fetched = await refreshIndex(true);
   if(fetched === null){
     list.innerHTML = `<div class="empty-state"><div class="ic">⚠️</div>Gagal memuat riwayat — periksa koneksi internet, lalu coba lagi.</div>`;
     return;
@@ -1032,7 +1143,7 @@ async function renderHistory(){
   const cardsHtml = items.map(t=>{
     const isOpen = t.status==='keluar-only';
     const allPhotos = Object.values(getAllPhotos(t)).slice(0,3);
-    const thumbs = allPhotos.map(src=>`<img src="${src}">`).join('');
+    const thumbs = allPhotos.map(src=>`<img src="${src}" onerror="markPhotoBroken_(this,'${src}',44)">`).join('');
     const groupDate = cleanDateValue(t.keluar?.tanggal || t.masuk?.tanggal || t.updatedAt);
     let headerHtml = '';
     if(groupDate !== lastDateKey){
@@ -1053,6 +1164,7 @@ async function renderHistory(){
           <span>Masuk: ${t.masuk?fmtDateID(t.masuk.tanggal)+' '+cleanTimeValue(t.masuk.jam):'-'}</span>
         </div>
         ${thumbs?`<div class="trip-thumbs">${thumbs}</div>`:''}
+        ${isOpen?`<button type="button" class="btn masuk" style="margin-top:10px;" onclick="startChecklistMasukFromHistory('${t.id}', event)">✅ Isi Checklist Masuk</button>`:''}
       </div>`;
   }).join('');
   list.innerHTML = cardsHtml;
@@ -1061,6 +1173,33 @@ async function openDetail(id){
   const detail = await fetchTripDetail(id);
   if(!detail){ toast('Gagal memuat detail dari spreadsheet'); return; }
   showReportModal(detail);
+}
+
+/* ---------- Checklist Masuk otomatis dari trip Keluar ---------- */
+// Dipanggil dari kartu riwayat (trip masih ada di tripIndex, tanpa fetch
+// tambahan) — id lalu dicocokkan ke tripIndex untuk ambil data lengkapnya.
+function startChecklistMasukFromHistory(id, ev){
+  if(ev) ev.stopPropagation();
+  const t = tripIndex.find(x=>x.id===id);
+  if(!t){ toast('Data trip tidak ditemukan, coba muat ulang riwayat.'); return; }
+  startChecklistMasuk(t);
+}
+// Pindah ke form Checklist Baru, set mode Masuk, dan mengisi otomatis
+// field kendaraan/pemakai/keperluan + memilih trip ini di dropdown "Tutup
+// checklist keluar yang sudah ada" berdasarkan data checklist Keluar-nya.
+async function startChecklistMasuk(trip){
+  if(!trip) return;
+  closeModal();
+  switchView('baru');
+  await setMode('masuk');
+  window._closingTripId = trip.id;
+  setSelectedNopol(trip.nopol||'');
+  document.getElementById('f_dept').value = trip.dept||'Arco';
+  document.getElementById('f_pemakai').value = trip.pemakai||'';
+  document.getElementById('f_keperluan').value = trip.keperluan||'';
+  const sel = document.getElementById('openTripSelect');
+  if(sel) sel.value = trip.id;
+  toast('Form Masuk diisi otomatis dari data Keluar — lengkapi sisanya lalu simpan.');
 }
 
 /* ---------- View switching ---------- */
