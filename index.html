@@ -614,6 +614,26 @@ function cleanTimeValue(v){
   const m = s.match(/T(\d{2}):(\d{2})/);
   return m ? (m[1]+':'+m[2]) : s;
 }
+/* Nilai Bensin ("E","1/8","1/4","1/2","3/4","F") kena masalah yang sama:
+   pecahan seperti "1/2" atau "3/4" dibaca Spreadsheet sebagai TANGGAL
+   (2 Januari, 4 Maret, dst — format M/D) lalu tersimpan jadi Date, bukan
+   teks pecahan aslinya. "E" dan "F" tidak mengandung "/" jadi aman, tidak
+   kena masalah ini. Fungsi ini mendeteksi hasil salah-baca itu (string
+   ISO tengah malam WIB) dan mengembalikannya ke label pecahan semula. */
+function cleanBensinValue(v){
+  if(!v) return v;
+  const s = String(v);
+  if(!s.includes('T')) return s;
+  const d = new Date(s);
+  if(isNaN(d.getTime())) return s;
+  // Tersimpan sebagai tengah malam WIB (UTC+7) → tambahkan 7 jam ke waktu
+  // UTC-nya dulu supaya tanggal kalender (bulan/tanggal) yang didapat
+  // sesuai dengan pecahan M/D yang dimaksud semula.
+  const local = new Date(d.getTime() + 7*3600*1000);
+  const key = `${local.getUTCMonth()+1}/${local.getUTCDate()}`;
+  const known = ['1/8','1/4','1/2','3/4'];
+  return known.includes(key) ? key : s;
+}
 function fmtDateID(iso){
   iso = cleanDateValue(iso);
   if(!iso) return '-';
@@ -1003,7 +1023,7 @@ function blockText(label, blk){
     `Tanggal : ${fmtDateID(blk.tanggal)}\n`+
     `Jam : ${cleanTimeValue(blk.jam)||'-'}\n`+
     `KM : ${blk.km||'-'}\n`+
-    `Bensin : ${blk.bensin||'-'}\n`+
+    `Bensin : ${cleanBensinValue(blk.bensin)||'-'}\n`+
     `Pemeriksa : ${blk.pemeriksa||'-'}\n`;
   if(exceptionsText) txt += `Catatan komponen : ${exceptionsText}\n`;
   if(blk.damage && blk.damage.length) txt += `Kondisi cat/body : ${blk.damage.join(', ')}\n`;
