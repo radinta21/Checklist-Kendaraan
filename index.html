@@ -399,7 +399,7 @@ button{font-family:var(--font-body);}
   <!-- ============ VIEW: RIWAYAT ============ -->
   <div class="view" id="view-riwayat">
     <div class="search-bar">
-      <input type="text" id="searchInput" placeholder="Cari nopol / nama pemakai..." oninput="renderHistory()">
+      <input type="text" id="searchInput" placeholder="Cari nopol / nama pemakai..." oninput="renderHistoryList()">
     </div>
     <div id="historyList"></div>
   </div>
@@ -749,39 +749,42 @@ function onPhotoChosen(key, input){
       ctx.drawImage(img,0,0,canvas.width,canvas.height);
 
       // ---- Stempel geotag: multi-baris, dibungkus otomatis agar tidak
-      // terpotong di tepi foto (format mengikuti contoh: tanggal/jam,
-      // lalu alamat baris per baris, lalu koordinat).
-      // Sengaja TANPA kotak/bar latar belakang, supaya tidak menutupi
-      // detail foto (misal lecet/kerusakan) di area itu — teksnya sendiri
-      // diberi garis tepi gelap (stroke) supaya tetap terbaca di atas
-      // foto apa pun tanpa perlu latar solid. ----
+      // terpotong di tepi foto (format mengikuti contoh: tanggal/jam lebih
+      // besar, lalu alamat baris per baris dengan ukuran lebih kecil, lalu
+      // koordinat). Teks putih polos tanpa garis tepi/bayangan apa pun —
+      // font sans-serif mengikuti contoh gambar (pakai Inter, font yang
+      // sudah dipakai di seluruh halaman ini). ----
+      const STAMP_FONT = "'Inter', Arial, sans-serif";
       const stampDate = document.getElementById('f_tanggal').value || nowDate();
       const stampTime = document.getElementById('f_jam').value || nowTime();
       const dateLine = fmtDateIDShort(stampDate)+'  '+stampTime;
-      const rawLines = [dateLine, ...SITE_ADDRESS_LINES];
-      if(geo) rawLines.push(`${geo.lat.toFixed(5)}, ${geo.lng.toFixed(5)}`);
+      const addressLines = [...SITE_ADDRESS_LINES];
+      if(geo) addressLines.push(`${geo.lat.toFixed(5)}, ${geo.lng.toFixed(5)}`);
 
-      const fs = Math.max(11, canvas.width*0.028);
-      const lineGap = fs*1.32;
+      const dateFs = Math.max(13, canvas.width*0.038);
+      const addrFs = Math.max(11, canvas.width*0.028);
+      const dateLineGap = dateFs*1.28;
+      const addrLineGap = addrFs*1.32;
       const padX = Math.max(10, canvas.width*0.02);
-      const padBottom = fs*0.85;
-
-      ctx.font = fs+'px monospace';
+      const padBottom = addrFs*0.85;
       const maxTextWidth = canvas.width - padX*2;
-      let lines = [];
-      rawLines.forEach(raw=>{ lines = lines.concat(wrapCanvasText(ctx, raw, maxTextWidth)); });
 
-      const blockH = lines.length*lineGap;
-      ctx.font = fs+'px monospace';
-      ctx.lineJoin = 'round';
-      ctx.lineWidth = Math.max(2, fs*0.22);
-      ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+      ctx.font = `500 ${dateFs}px ${STAMP_FONT}`;
+      const dateLines = wrapCanvasText(ctx, dateLine, maxTextWidth);
+      ctx.font = `500 ${addrFs}px ${STAMP_FONT}`;
+      let addrLines = [];
+      addressLines.forEach(raw=>{ addrLines = addrLines.concat(wrapCanvasText(ctx, raw, maxTextWidth)); });
+
+      const blockH = dateLines.length*dateLineGap + addrLines.length*addrLineGap;
       ctx.fillStyle = '#FFFFFF';
-      lines.forEach((ln,i)=>{
-        const y = canvas.height - padBottom - blockH + (i+1)*lineGap - lineGap*0.28;
-        ctx.strokeText(ln, padX, y);
-        ctx.fillText(ln, padX, y);
-      });
+      ctx.textBaseline = 'alphabetic';
+      let y = canvas.height - padBottom - blockH;
+
+      ctx.font = `500 ${dateFs}px ${STAMP_FONT}`;
+      dateLines.forEach(ln=>{ y += dateLineGap; ctx.fillText(ln, padX, y); });
+
+      ctx.font = `500 ${addrFs}px ${STAMP_FONT}`;
+      addrLines.forEach(ln=>{ y += addrLineGap; ctx.fillText(ln, padX, y); });
 
       const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
       currentPhotos[key] = dataUrl;
@@ -1084,21 +1087,47 @@ function dataURLtoFile(dataUrl, filename){
   while(n--){ u8[n] = bstr.charCodeAt(n); }
   return new File([u8], filename, {type:mime});
 }
+// Foto yang sudah tersimpan di spreadsheet berupa link Google Drive
+// (bukan base64) — diunduh dulu lewat fetch() lalu diubah jadi File,
+// supaya tetap bisa dilampirkan saat dibagikan. Kalau link gagal diambil
+// (mis. tanpa akses/offline/CORS dibatasi), foto itu saja yang dilewati,
+// sisanya tetap lanjut dibagikan sebagai file.
+async function urlToFile(url, filename){
+  try{
+    const res = await fetch(url);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const blob = await res.blob();
+    return new File([blob], filename, {type: blob.type || 'image/jpeg'});
+  }catch(err){
+    console.error('Gagal mengambil foto untuk dibagikan:', url, err);
+    return null;
+  }
+}
 async function shareNative(){
   const text = buildReportText(modalTrip);
   const allPhotos = getAllPhotos(modalTrip);
   const entries = Object.entries(allPhotos);
-  // Foto dari spreadsheet berupa link Google Drive (bukan base64), jadi
-  // tidak semuanya bisa dilampirkan sebagai file langsung — foto yang
-  // baru diambil di HP ini (base64) tetap dilampirkan sebagai file.
+  // Foto yang baru diambil di HP ini (base64) langsung dijadikan file.
+  // Foto dari spreadsheet (link Google Drive) diambil dulu lewat
+  // urlToFile() lalu ikut dilampirkan juga — supaya perlakuannya SAMA
+  // baik untuk laporan Checklist Keluar maupun Checklist Masuk, dan baik
+  // dibagikan langsung sesudah simpan maupun dibuka lagi dari Riwayat.
   // Link foto TIDAK disertakan di teks laporan (sengaja dihapus agar
   // laporan tetap ringkas) — foto tetap terlampir sebagai file bila ada.
-  const localEntries = entries.filter(([,src])=>src.startsWith('data:'));
-  const files = localEntries.map(([k,src])=>dataURLtoFile(src, k+'.jpg'));
+  const filePromises = entries.map(([k,src])=>{
+    return src.startsWith('data:') ? Promise.resolve(dataURLtoFile(src, k+'.jpg')) : urlToFile(src, k+'.jpg');
+  });
+  const files = (await Promise.all(filePromises)).filter(Boolean);
+  const skipped = entries.length - files.length;
   try{
     if(files.length && navigator.canShare && navigator.canShare({files}) ){
       await navigator.share({text, files, title:'Laporan Pemakaian Kendaraan'});
     } else if(navigator.share){
+      if(entries.length && !files.length){
+        toast('Foto tidak dapat dilampirkan (link tidak bisa diakses) — hanya teks yang dibagikan.');
+      } else if(skipped>0){
+        toast(`${skipped} foto tidak bisa diikutkan (link tidak dapat diakses).`);
+      }
       await navigator.share({text, title:'Laporan Pemakaian Kendaraan'});
     } else {
       toast('Perangkat ini tidak mendukung berbagi langsung — gunakan tombol Gmail/WhatsApp.');
@@ -1124,19 +1153,22 @@ function downloadAllPhotos(){
   });
 }
 
-/* ---------- History view ---------- */
-async function renderHistory(){
+/* ---------- History view ----------
+   Sebelumnya renderHistory() SELALU fetch ulang ke Apps Script setiap
+   kali dipanggil — termasuk setiap kali tab Riwayat dibuka DAN setiap
+   ketikan di kolom pencarian (oninput). Itu penyebab utama "lama sekali":
+   tiap huruf yang diketik nunggu network ke spreadsheet.
+   Sekarang dipisah:
+   - renderHistoryList()  → murni menyaring & menggambar dari tripIndex
+     yang sudah ada di memori, TANPA network sama sekali (dipakai untuk
+     pencarian, jadi terasa instan).
+   - renderHistory()      → dipanggil saat tab dibuka: kalau sudah ada
+     data di memori, langsung tampilkan itu dulu (instan) sambil di
+     belakang layar mengambil data terbaru, baru gambar ulang kalau
+     sudah selesai. Kalau belum ada data sama sekali, baru tampilkan
+     status "Memuat...". */
+function renderHistoryList(){
   const list = document.getElementById('historyList');
-  if(!appsScriptConfigured()){
-    list.innerHTML = `<div class="empty-state"><div class="ic">⚠️</div>Apps Script belum terhubung — riwayat tidak dapat dimuat dari spreadsheet.</div>`;
-    return;
-  }
-  list.innerHTML = `<div class="empty-state"><div class="ic">⏳</div>Memuat riwayat dari spreadsheet…</div>`;
-  const fetched = await refreshIndex(true);
-  if(fetched === null){
-    list.innerHTML = `<div class="empty-state"><div class="ic">⚠️</div>Gagal memuat riwayat — periksa koneksi internet, lalu coba lagi.</div>`;
-    return;
-  }
   const q = (document.getElementById('searchInput').value||'').toLowerCase();
   let items = [...tripIndex].sort((a,b)=> new Date(b.updatedAt) - new Date(a.updatedAt));
   if(q) items = items.filter(t => (t.nopol+' '+t.pemakai+' '+t.dept).toLowerCase().includes(q));
@@ -1148,7 +1180,7 @@ async function renderHistory(){
   const cardsHtml = items.map(t=>{
     const isOpen = t.status==='keluar-only';
     const allPhotos = Object.values(getAllPhotos(t)).slice(0,3);
-    const thumbs = allPhotos.map(src=>`<img src="${src}" onerror="markPhotoBroken_(this,'${src}',44)">`).join('');
+    const thumbs = allPhotos.map(src=>`<img src="${src}" loading="lazy" onerror="markPhotoBroken_(this,'${src}',44)">`).join('');
     const groupDate = cleanDateValue(t.keluar?.tanggal || t.masuk?.tanggal || t.updatedAt);
     let headerHtml = '';
     if(groupDate !== lastDateKey){
@@ -1173,6 +1205,32 @@ async function renderHistory(){
       </div>`;
   }).join('');
   list.innerHTML = cardsHtml;
+}
+async function renderHistory(){
+  const list = document.getElementById('historyList');
+  if(!appsScriptConfigured()){
+    list.innerHTML = `<div class="empty-state"><div class="ic">⚠️</div>Apps Script belum terhubung — riwayat tidak dapat dimuat dari spreadsheet.</div>`;
+    return;
+  }
+  // Kalau sudah ada data di memori (dari kunjungan sebelumnya ke tab ini),
+  // langsung tampilkan itu dulu — instan, tanpa nunggu network — sambil
+  // di belakang layar diambil data terbaru. Kalau belum ada data sama
+  // sekali (baru buka aplikasi), baru tampilkan status "Memuat...".
+  if(tripIndex.length){
+    renderHistoryList();
+  } else {
+    list.innerHTML = `<div class="empty-state"><div class="ic">⏳</div>Memuat riwayat dari spreadsheet…</div>`;
+  }
+  const fetched = await refreshIndex(true);
+  if(fetched === null){
+    if(!tripIndex.length){
+      list.innerHTML = `<div class="empty-state"><div class="ic">⚠️</div>Gagal memuat riwayat — periksa koneksi internet, lalu coba lagi.</div>`;
+    } else {
+      toast('Gagal memuat riwayat terbaru — menampilkan data sebelumnya.');
+    }
+    return;
+  }
+  renderHistoryList();
 }
 async function openDetail(id){
   const detail = await fetchTripDetail(id);
