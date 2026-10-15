@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Checklist Kendaraan — BC Campang Raya</title>
+<title>SEVEN Vehicle Checklist — BC Campang Raya</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -257,16 +257,67 @@ button{font-family:var(--font-body);}
   border-radius:8px;padding:10px 12px;margin-bottom:14px;}
 .note.warn{background:var(--danger-soft);border-color:var(--danger);color:var(--danger);}
 </style>
+<style>
+/* ===== SEVEN theme ===== */
+:root{--bg:#F3F6FB;--surface:#fff;--surface-2:#F6F8FC;--ink:#0B1F44;--ink-soft:#64748B;--line:#E1E7F0;--keluar:#1D63F0;--keluar-soft:#DCE8FF;--masuk:#12A37F;--masuk-soft:#D5F3EA;--danger:#E5484D;--danger-soft:#FDE3E4;--stamp:#0B1F44;--navy:#0A2150;--radius:14px;--font-display:'Inter',system-ui,sans-serif;}
+h1,h2,h3{font-weight:700;letter-spacing:0}
+.topbar{background:var(--navy);border-bottom:0;height:64px;padding:0 16px}
+.topbar .stamp-mark{border:0;transform:none;width:44px;height:30px;border-radius:0}
+.topbar .titles h1{font-size:20px;letter-spacing:.12em;line-height:1.1}
+.topbar .titles p,.topbar .badge-online{font-family:var(--font-body)}
+.section-title{font-family:var(--font-body);text-transform:none;letter-spacing:0;font-size:13px;font-weight:700;color:var(--ink)}
+.mode-btn .lbl{transform:none;letter-spacing:.04em}
+.stamp-badge{transform:none;border-radius:99px;font-family:var(--font-body)}
+.btn{border-radius:10px}
+.navbtn{font-size:10px;padding:8px 2px}
+.hdr{margin:2px 0 14px}.hdr h2{font-size:22px}.hdr p{margin:2px 0 0;color:var(--ink-soft);font-size:13px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.stat{border-radius:14px;padding:14px;border:1px solid var(--line);background:var(--surface)}
+.stat .ico{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;margin-bottom:8px}
+.stat b{font-size:26px;display:block}.stat small{color:var(--ink-soft);font-size:11.5px}
+.blue .ico{background:#DCE8FF}.green .ico{background:#D5F3EA}.orange .ico{background:#FFEBC8}.purple .ico{background:#E9E1FF}
+.vrow{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.vrow:last-child{border-bottom:0}
+.vrow .info{flex:1;min-width:0}.vrow .info b{display:block;font-size:14px}.vrow .info span{font-size:12px;color:var(--ink-soft)}
+.vrow .btn{width:auto;padding:8px 14px}
+.pill{font-size:11px;font-weight:600;padding:3px 9px;border-radius:99px;white-space:nowrap;height:fit-content}
+.pill.ok{background:#D5F3EA;color:#0B7A5E}.pill.warn{background:#FFEBC8;color:#9A5B00}.pill.bad{background:#FDE3E4;color:#B3261E}
+.rem{padding:10px 12px;border:1px solid var(--line);border-left:4px solid #F59F00;border-radius:10px;margin-bottom:8px;font-size:13px;cursor:pointer;background:#fff;line-height:1.6}
+.doc .top{display:flex;justify-content:space-between;gap:8px}
+.doc-act{display:flex;gap:8px;margin-top:10px}.doc-act .btn{width:auto;flex:1;padding:9px;text-decoration:none}
+.cal-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.cal-h button{border:1px solid var(--line);background:#fff;border-radius:8px;width:34px;height:30px;font-size:16px;cursor:pointer}
+.cal-g{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center}
+.cal-g i{font-style:normal;font-size:11px;color:var(--ink-soft)}
+.cal-g button{border:0;background:var(--surface-2);border-radius:8px;padding:6px 0 4px;font-size:12.5px;color:var(--ink);min-height:40px;cursor:pointer}
+.cal-g button.tdy{outline:2px solid var(--keluar)}
+.cal-g em{display:flex;justify-content:center;gap:2px;height:6px;margin-top:3px}
+u{width:6px;height:6px;border-radius:50%;display:inline-block;text-decoration:none}
+.cal-ev{font-size:12.5px;margin-top:10px;line-height:1.7}.cal-ev u{margin-right:6px}
+button.stat{width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer;position:relative}
+button.stat::after{content:'›';position:absolute;right:14px;top:12px;font-size:20px;color:var(--ink-soft)}
+.cal-g button.sel{background:var(--keluar-soft)}
+.cal-ev .lnk{cursor:pointer;text-decoration:underline}
+.cal-lg{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:11.5px;margin-top:12px;color:var(--ink-soft)}.cal-lg u{margin-right:5px}
+@media (min-width:900px){
+  body{padding-bottom:0}
+  .stats{grid-template-columns:repeat(4,1fr)}
+  .bottomnav{top:64px;bottom:0;left:0;right:auto;width:210px;max-width:none;transform:none;flex-direction:column;justify-content:flex-start;gap:4px;background:var(--navy);border:0;padding:16px 12px}
+  .navbtn{flex:none;flex-direction:row;gap:10px;padding:11px 12px;border-radius:8px;color:#C7D3EC;font-size:13.5px;justify-content:flex-start}
+  .navbtn.active{background:var(--keluar);color:#fff}
+  .app{margin:0 0 0 210px;max-width:none;padding:24px 28px}
+}
+</style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
 <div class="topbar">
-  <div class="stamp-mark">BC</div>
+  <div class="stamp-mark"><svg viewBox="0 0 48 32" width="44" height="30"><path d="M4 22l4-9c1-3 3-5 7-5h14c4 0 6 1 8 4l5 5c2 1 3 2 3 5v2H4z" fill="none" stroke="#4C8DFF" stroke-width="3" stroke-linejoin="round"/><circle cx="14" cy="25" r="3.5" fill="#0A2150" stroke="#4C8DFF" stroke-width="3"/><circle cx="36" cy="25" r="3.5" fill="#0A2150" stroke="#4C8DFF" stroke-width="3"/></svg></div>
   <div class="titles">
-    <h1>Checklist Kendaraan</h1>
-    <p id="siteLabel">BC Campang Raya · Jalan Tembesu 4</p>
+    <h1>SEVEN</h1>
+    <p id="siteLabel">Vehicle Checklist · BC Campang Raya</p>
   </div>
   <div class="badge-online" id="statusPill">● tersimpan</div>
 </div>
@@ -274,7 +325,12 @@ button{font-family:var(--font-body);}
 <div class="app">
 
   <!-- ============ VIEW: BARU ============ -->
-  <div class="view active" id="view-baru">
+  <div class="view active" id="view-dash"></div>
+  <div class="view" id="view-stnk"></div>
+  <div class="view" id="view-service"></div>
+  <div class="view" id="view-sim"></div>
+
+  <div class="view" id="view-baru">
 
     <div class="note" id="modeNote">Data checklist tersimpan dan dapat dilihat oleh semua security &amp; admin yang membuka aplikasi ini. Laporan bisa dikirim ke email <b>jatra_radinta@biznetnetworks.com</b> atau dibagikan ke WhatsApp setelah disimpan.</div>
 
@@ -368,7 +424,7 @@ button{font-family:var(--font-body);}
     </div>
 
     <div class="card">
-      <div class="section-title">Checklist 20 Komponen</div>
+      <div class="section-title">Checklist Komponen</div>
       <div class="legend">
         <span><b>B</b> Baik</span><span><b>R</b> Rusak</span><span><b>H</b> Hilang</span><span><b>T</b> Tidak Ada</span>
       </div>
@@ -407,12 +463,12 @@ button{font-family:var(--font-body);}
 </div>
 
 <div class="bottomnav">
-  <button class="navbtn active" id="nav-baru" onclick="switchView('baru')">
-    <span class="ic">📋</span>Checklist Baru
-  </button>
-  <button class="navbtn" id="nav-riwayat" onclick="switchView('riwayat')">
-    <span class="ic">🗂️</span>Riwayat
-  </button>
+  <button class="navbtn active" data-v="dash" onclick="switchView('dash')"><span class="ic">🏠</span>Beranda</button>
+  <button class="navbtn" data-v="baru" onclick="switchView('baru')"><span class="ic">📋</span>Checklist</button>
+  <button class="navbtn" data-v="stnk" onclick="switchView('stnk')"><span class="ic">🪪</span>STNK</button>
+  <button class="navbtn" data-v="service" onclick="switchView('service')"><span class="ic">🔧</span>Service</button>
+  <button class="navbtn" data-v="sim" onclick="switchView('sim')"><span class="ic">👤</span>SIM</button>
+  <button class="navbtn" data-v="riwayat" onclick="switchView('riwayat')"><span class="ic">🗂️</span>Riwayat</button>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -545,14 +601,18 @@ const SITE_ADDRESS_LINES = [
   "Lampung"
 ];
 const VEHICLES = [
-  { nopol: "BE1058ABF", label: "Xenia 1.3 MT 2026 (BE1058ABF)" },
-  { nopol: "BE1350AAL", label: "Gran Max 1.5 MT 2022 (BE1350AAL)" }
+  { nopol: "BE1058ABF", name: "Xenia X 1.3 2026", jenis: "Mobil", label: "Xenia X 1.3 2026 (BE1058ABF)" },
+  { nopol: "BE1350AAL", name: "Gran Max MB 1.3", jenis: "Mobil", label: "Gran Max MB 1.3 (BE1350AAL)" },
+  { nopol: "BE2089AHT", name: "Revo Fit", jenis: "Motor", label: "Revo Fit (BE2089AHT)" },
+  { nopol: "BE2582AJU", name: "Revo X", jenis: "Motor", label: "Revo X (BE2582AJU)" }
 ];
-const KOMPONEN = [
+let KOMPONEN = [
   "Label Oli","Head Unit","STNK","Safety Belt","Head Rest","Lampu Plafond","Karpet","Dongkrak",
   "Segitiga Pengaman","Kunci Roda","Kaca Spion dalam","Kaca Spion Luar","Ban Serep","Velg Racing",
   "Antena","Emblem/Stiker","Lampu Depan","Lampu Belakang","Lampu Spion","Apar"
 ];
+const KOMPONEN_MOBIL = KOMPONEN.slice();
+const KOMPONEN_MOTOR = ["STNK","Lampu Depan","Lampu Belakang","Lampu Sein","Spion Kanan","Spion Kiri","Klakson","Rem Depan","Rem Belakang","Ban Depan","Ban Belakang","Rantai / Gir","Jok","Handle Gas & Kopling","Spakbor / Cover Body"];
 const DAMAGE_TYPES = ["Baret","Penyok","Retak","Pecah"];
 // Checklist Keluar: 4 foto dalam satu grid (tanpa tab).
 const PHOTO_SLOTS_KELUAR = [
@@ -853,8 +913,11 @@ function buildVehicleSelect(){
   onVehicleChange();
 }
 function onVehicleChange(){
-  const isCustom = document.getElementById('f_nopol').value === '__custom__';
-  document.getElementById('customNopolField').style.display = isCustom ? 'block' : 'none';
+  const v = document.getElementById('f_nopol').value;
+  document.getElementById('customNopolField').style.display = v === '__custom__' ? 'block' : 'none';
+  const veh = VEHICLES.find(x=>x.nopol===v);
+  const next = (veh && veh.jenis==='Motor') ? KOMPONEN_MOTOR : KOMPONEN_MOBIL;
+  if(next !== KOMPONEN){ KOMPONEN = next; buildChecklist(); }
 }
 function getSelectedNopol(){
   const sel = document.getElementById('f_nopol').value;
@@ -985,6 +1048,7 @@ async function submitTrip(){
   }
 
   toast('Checklist tersimpan ke spreadsheet');
+  postSaveKm(nopol);
 
   // Jika ini menutup trip (masuk atas trip yang sudah keluar), ambil
   // detail gabungan dari spreadsheet supaya laporan menampilkan Keluar +
@@ -1286,13 +1350,6 @@ async function startChecklistMasuk(trip){
 }
 
 /* ---------- View switching ---------- */
-function switchView(v){
-  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
-  document.getElementById('view-'+v).classList.add('active');
-  document.getElementById('nav-baru').classList.toggle('active', v==='baru');
-  document.getElementById('nav-riwayat').classList.toggle('active', v==='riwayat');
-  if(v==='riwayat') renderHistory();
-}
 
 /* ---------- Init ---------- */
 function initGeo(){
@@ -1323,8 +1380,283 @@ window.addEventListener('DOMContentLoaded', ()=>{
   resetTimeFields();
   applyConnectionStatus();
   initGeo();
-  refreshIndex();
+  initDocs();
 });
+/* ===== SEVEN: Dashboard, STNK, Service Berkala, SIM, Pengingat ===== */
+const MONTHS=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+const TM={stnk:{c:'#1D63F0',l:'STNK & Pajak'},service:{c:'#F59F00',l:'Service Berkala'},sim:{c:'#7C4DFF',l:'SIM'}};
+const REMIND_DAYS=30; // H-1 bulan
+const REMIND_KM=1000;
+const CFG={
+  stnk:{t:'STNK & Pajak',sub:'Jatuh tempo pajak kendaraan dan arsip STNK.',key:'v',due:'Jatuh tempo pajak tahunan',extra:['Masa berlaku STNK 5 tahunan','date'],amount:'Biaya pajak (Rp)',note:'Catatan',file:'Upload PDF STNK / bukti bayar pajak',accept:'application/pdf',hint:'Pengingat muncul H-30 sebelum jatuh tempo dan berhenti setelah PDF diunggah. Setelah pajak diperpanjang, tambahkan data jatuh tempo tahun berikutnya.'},
+  service:{t:'Service Berkala',sub:'Pengingat service lewat tanggal ATAU kilometer, mana yang lebih dulu.',key:'v',date:'Tanggal service terakhir',due:'Jadwal service berikutnya (tanggal)',nextKm:'KM service berikutnya',dueOpt:true,extra:['KM saat service terakhir','number'],amount:'Biaya tagihan / estimasi (Rp)',note:'Bengkel / catatan',file:'Arsip PDF tagihan service terakhir (opsional)',accept:'application/pdf',hint:'Isi tanggal dan/atau KM berikutnya. Pengingat muncul H-30 sebelum tanggal, atau saat sisa ≤1.000 km (dihitung dari KM checklist keluar/masuk), mana yang lebih dulu. Pengingat hilang setelah service diselesaikan: upload PDF + isi jadwal berikutnya.'},
+  sim:{t:'SIM Pengendara',sub:'Arsip SIM A / SIM C pengendara.',key:'text',keyLabel:'Nama pengendara',due:'Berlaku sampai',extra:['Jenis SIM','sel:SIM A,SIM C'],note:'Catatan',file:'Upload foto / PDF SIM',accept:'application/pdf,image/*',hint:'File disimpan di Google Drive.'}
+};
+let docs=[],docsOk=false,remShown=false;
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const vOf=n=>VEHICLES.find(x=>x.nopol===n);
+const vLabel=n=>{const v=vOf(n);return v?`${v.name} · ${n}`:n;};
+const dKey=d=>d.type==='sim'?esc(d.key):esc(vLabel(d.key));
+function daysTo(iso){const p=cleanDateValue(iso).split('-').map(Number);if(p.length<3||isNaN(p[0]))return null;const t=new Date();t.setHours(0,0,0,0);return Math.round((new Date(p[0],p[1]-1,p[2])-t)/864e5);}
+function latest(type,key){return docs.filter(d=>d.type===type&&d.key===key&&d.due).sort((a,b)=>cleanDateValue(b.due).localeCompare(cleanDateValue(a.due)))[0];}
+const stOf=d=>d.status||(d.file?'selesai':'aktif');
+function curKm(n){const t=tripIndex.find(x=>x.nopol===n),b=t&&(t.masuk||t.keluar),k=parseInt(b&&b.km,10);return isNaN(k)?null:k;}
+function activeSvc(n){return docs.filter(d=>d.type==='service'&&d.key===n&&stOf(d)==='aktif').sort((a,b)=>String(b.created).localeCompare(String(a.created)))[0];}
+function svcInfo(v){
+  const rec=activeSvc(v.nopol);if(!rec)return null;
+  const dDays=rec.due?daysTo(rec.due):null,nk=parseInt(rec.nextKm,10)||null;
+  const cur=curKm(v.nopol)??(parseInt(rec.extra,10)||null);
+  const kmLeft=(nk&&cur!=null)?nk-cur:null;
+  const byDate=dDays!==null&&dDays<=REMIND_DAYS,byKm=kmLeft!==null&&kmLeft<=REMIND_KM;
+  return {rec,dDays,nk,cur,kmLeft,byDate,byKm,hit:byDate||byKm};
+}
+const nf=n=>Number(n).toLocaleString('id-ID');
+function svcText(s){
+  if(!s)return 'belum ada jadwal';
+  const p=[];
+  if(s.rec.due)p.push(`${fmtDateID(s.rec.due)} ${dueBadge(s.dDays,false)}`);
+  if(s.nk)p.push(`${nf(s.nk)} km `+(s.kmLeft!==null?`<span class="pill ${s.kmLeft<=REMIND_KM?'warn':'ok'}">sisa ${nf(s.kmLeft)} km</span>`:'(KM kini belum ada)'));
+  return p.join(' · ');
+}
+function getReminders(){
+  const out=[];
+  VEHICLES.forEach(v=>{
+    const r=latest('stnk',v.nopol);
+    if(r&&!r.file){const d=daysTo(r.due);if(d!==null&&d<=REMIND_DAYS)out.push({type:'stnk',v,rec:r,days:d});}
+    const s=svcInfo(v);if(s&&s.hit)out.push({type:'service',v,rec:s.rec,info:s});
+  });
+  return out;
+}
+function postSaveKm(nopol){
+  refreshIndex(true).then(()=>{renderDash();const v=vOf(nopol),s=v&&svcInfo(v);
+    if(s&&s.hit)setTimeout(()=>toast('Service '+v.name+' mendekati: '+(s.byKm?'sisa '+nf(s.kmLeft)+' km':'H-'+s.dDays)),2400);});
+}
+function dueBadge(d,hasFile){
+  if(d===null) return '';
+  const cls=hasFile?'ok':d<0?'bad':d<=REMIND_DAYS?'warn':'ok';
+  return `<span class="pill ${cls}">${d<0?'Lewat '+(-d)+' hari':d===0?'Hari ini':'H-'+d}</span>`;
+}
+
+/* ---------- Data ---------- */
+async function loadDocs(){
+  if(!appsScriptConfigured()) return;
+  try{
+    const r=await fetchWithTimeout_(APPS_SCRIPT_URL+'?action=docs');const j=await r.json();
+    docsOk=!!(j&&j.ok&&Array.isArray(j.docs)); // false jika Code.gs belum di-deploy ulang
+    if(docsOk) docs=j.docs;
+  }catch(e){console.error(e);docsOk=false;}
+  renderAll();
+}
+async function postDoc(body){
+  const r=await fetch(APPS_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)});
+  return r.json();
+}
+function readFile(f){return new Promise((res,rej)=>{
+  if(f.size>6e6) return rej(new Error('Ukuran file maksimal 6 MB'));
+  const r=new FileReader();r.onload=()=>res({name:f.name,data:r.result});r.onerror=()=>rej(new Error('Gagal membaca file'));r.readAsDataURL(f);
+});}
+
+/* ---------- Form ---------- */
+function buildDocForm(type){
+  const c=CFG[type],f=(l,i)=>`<div class="field"><label>${l}</label>${i}</div>`;
+  const k=c.key==='v'?`<select id="d_${type}_key">${VEHICLES.map(v=>`<option value="${v.nopol}">${v.label}</option>`).join('')}</select>`:`<input id="d_${type}_key" placeholder="Nama lengkap">`;
+  let ex='';
+  if(c.extra){const [l,t]=c.extra;ex=f(l,t.startsWith('sel:')?`<select id="d_${type}_extra">${t.slice(4).split(',').map(o=>`<option>${o}</option>`).join('')}</select>`:`<input id="d_${type}_extra" type="${t}" class="mono">`);}
+  document.getElementById('view-'+type).innerHTML=`
+    <div class="hdr"><h2>${c.t}</h2><p>${c.sub}</p></div>
+    <div class="card"><div class="section-title">Input ${c.t}</div>
+      ${f(c.keyLabel||'Kendaraan',k)}
+      ${c.date?f(c.date,`<input type="date" id="d_${type}_date" class="mono">`):''}
+      ${f(c.due,`<input type="date" id="d_${type}_due" class="mono">`)}
+      ${c.nextKm?f(c.nextKm,`<input type="number" id="d_${type}_nextKm" class="mono" placeholder="mis. 45000">`):''}
+      ${ex}
+      ${c.amount?f(c.amount,`<input type="number" id="d_${type}_amount" class="mono" placeholder="0">`):''}
+      ${c.note?f(c.note,`<input id="d_${type}_note">`):''}
+      ${f(c.file,`<input type="file" id="d_${type}_file" accept="${c.accept}">`)}
+      <div class="note">${c.hint}</div>
+      <button class="btn keluar" id="d_${type}_btn" onclick="saveDoc('${type}')">Simpan</button></div>
+    <div class="card"><div class="section-title">Kalender</div><div id="cal_${type}"></div></div>
+    <div id="list_${type}"></div>`;
+}
+async function saveDoc(type){
+  const c=CFG[type],g=s=>{const e=document.getElementById(`d_${type}_${s}`);return e?e.value.trim():'';};
+  const key=g('key'),due=g('due'),btn=document.getElementById(`d_${type}_btn`);
+  if(!key||(!due&&!(c.dueOpt&&g('nextKm')))) return toast(c.dueOpt?'Isi kendaraan dan tanggal / KM service berikutnya':(c.keyLabel||'Kendaraan')+' dan tanggal wajib diisi');
+  if(!docsOk) return toast('Belum terhubung — deploy ulang Code.gs terbaru di Apps Script');
+  const fi=document.getElementById(`d_${type}_file`).files[0];
+  btn.disabled=true;btn.textContent='Menyimpan...';
+  try{
+    if(fi&&c.accept==='application/pdf'&&fi.type!=='application/pdf') throw new Error('File harus berformat PDF');
+    const file=fi?await readFile(fi):null;
+    const j=await postDoc({action:'saveDoc',record:{type,key,date:g('date'),due,extra:g('extra'),nextKm:g('nextKm'),amount:g('amount'),note:g('note')},file});
+    if(!j.ok) throw new Error(j.error||'Gagal menyimpan');
+    toast(file?'Tersimpan · pengingat dimatikan':'Tersimpan');
+    ['date','due','nextKm','extra','amount','note','file'].forEach(s=>{const e=document.getElementById(`d_${type}_${s}`);if(e&&e.tagName!=='SELECT')e.value='';});
+    await loadDocs();
+  }catch(e){toast(e.message);}
+  btn.disabled=false;btn.textContent='Simpan';
+}
+async function attachDoc(id,input){
+  const f=input.files[0];if(!f)return;
+  try{
+    const file=await readFile(f);toast('Mengunggah...');
+    const j=await postDoc({action:'attachFile',id,file});
+    if(!j.ok) throw new Error(j.error||'Gagal mengunggah');
+    toast('File terunggah · pengingat dimatikan');await loadDocs();
+  }catch(e){toast(e.message);}
+}
+async function delDoc(id){
+  if(!confirm('Hapus data ini?')) return;
+  try{const j=await postDoc({action:'deleteDoc',id});if(!j.ok)throw new Error(j.error);await loadDocs();}catch(e){toast(e.message);}
+}
+
+/* ---------- Render ---------- */
+function renderList(type){
+  if(type==='service') return renderSvcList();
+  const c=CFG[type],el=document.getElementById('list_'+type);
+  const items=docs.filter(d=>d.type===type).sort((a,b)=>cleanDateValue(b.due).localeCompare(cleanDateValue(a.due)));
+  el.innerHTML='<div class="section-title">Data tersimpan</div>'+(items.length?items.map(d=>`
+    <div class="card doc"><div class="top"><div>
+      <div class="plate">${dKey(d)}</div>
+      <div class="who">${c.due}: ${fmtDateID(d.due)}</div>
+      ${d.date?`<div class="who">${c.date}: ${fmtDateID(d.date)}</div>`:''}
+      ${d.extra?`<div class="who">${c.extra[0]}: ${esc(cleanDateValue(d.extra))}</div>`:''}
+      ${d.amount?`<div class="who">Rp ${Number(d.amount).toLocaleString('id-ID')}</div>`:''}
+      ${d.note?`<div class="who">${esc(d.note)}</div>`:''}
+    </div>${dueBadge(daysTo(d.due),type!=='sim'&&!!d.file)}</div>
+    <div class="doc-act">${d.file?`<a class="btn secondary" href="${esc(d.file)}" target="_blank" rel="noopener">Lihat file</a>`:`<label class="btn keluar">Upload ${type==='sim'?'file':'PDF'}<input type="file" hidden accept="${c.accept}" onchange="attachDoc('${d.id}',this)"></label>`}<button class="btn ghost" onclick="delDoc('${d.id}')">Hapus</button></div></div>`).join(''):'<div class="empty-state"><div class="ic">📂</div>Belum ada data. Isi form di atas.</div>');
+}
+const KC={stnk:{c:'#1D63F0',l:'STNK / pajak berakhir'},service:{c:'#F59F00',l:'Jadwal service'},svch:{c:'#E8590C',l:'Riwayat service'},sim:{c:'#7C4DFF',l:'SIM berlaku sampai'},trip:{c:'#12A37F',l:'Checklist harian'}};
+const KIND_BY_TYPE={stnk:['stnk'],service:['service','svch'],sim:['sim']};
+const calSt={};
+function calEvents(type){
+  const ev={},add=(k,e)=>{k=cleanDateValue(k);if(k)(ev[k]=ev[k]||[]).push(e);};
+  docs.forEach(d=>{
+    if(type&&d.type!==type)return;
+    if(d.due)add(d.due,{kind:d.type,txt:KC[d.type].l+' — '+dKey(d)});
+    if(d.type==='service'&&stOf(d)==='selesai'&&d.date)add(d.date,{kind:'svch',txt:'Service dilakukan — '+dKey(d)+(d.extra?' · '+nf(d.extra)+' km':''),file:d.file});
+  });
+  if(!type)tripIndex.forEach(t=>[['Keluar',t.keluar],['Masuk',t.masuk]].forEach(([m,b])=>{
+    if(b&&b.tanggal)add(b.tanggal,{kind:'trip',id:t.id,txt:`${m} ${cleanTimeValue(b.jam)} — ${esc(t.nopol)} · ${esc(t.pemakai)}${b.km?' · KM '+esc(b.km):''}`});
+  }));
+  return ev;
+}
+function renderCal(id,type){
+  const el=document.getElementById(id);if(!el)return;
+  const n=new Date(),st=calSt[id]=calSt[id]||{y:n.getFullYear(),m:n.getMonth()};
+  st.type=type||'';st.ev=calEvents(type);
+  const first=new Date(st.y,st.m,1).getDay(),total=new Date(st.y,st.m+1,0).getDate(),today=nowDate();
+  let h=`<div class="cal-h"><button onclick="calNav('${id}',-1)">‹</button><b>${MONTHS[st.m]} ${st.y}</b><button onclick="calNav('${id}',1)">›</button></div><div class="cal-g">`+['Min','Sen','Sel','Rab','Kam','Jum','Sab'].map(x=>`<i>${x}</i>`).join('')+'<span></span>'.repeat(first);
+  for(let d=1;d<=total;d++){
+    const k=`${st.y}-${pad(st.m+1)}-${pad(d)}`,kinds=[...new Set((st.ev[k]||[]).map(e=>e.kind))];
+    h+=`<button class="${k===today?'tdy ':''}${k===st.sel?'sel':''}" onclick="calPick('${id}','${k}')">${d}<em>${kinds.map(x=>`<u style="background:${KC[x].c}"></u>`).join('')}</em></button>`;
+  }
+  const lg=(type?KIND_BY_TYPE[type]:Object.keys(KC)).map(k=>`<span><u style="background:${KC[k].c}"></u>${KC[k].l}</span>`).join('');
+  el.innerHTML=h+`</div><div class="cal-ev" id="${id}_ev"></div><div class="cal-lg">${lg}</div>`;
+  if(st.sel)fillCalDetail(id);
+}
+function fillCalDetail(id){
+  const st=calSt[id],list=st.ev[st.sel]||[];
+  document.getElementById(id+'_ev').innerHTML=`<b>${fmtDateID(st.sel)}</b>`+(list.length?list.map(e=>`<div class="ci${e.id?' lnk':''}"${e.id?` onclick="openDetail('${e.id}')"`:''}><u style="background:${KC[e.kind].c}"></u>${e.txt}${e.file?` · <a href="${esc(e.file)}" target="_blank" rel="noopener">PDF</a>`:''}</div>`).join(''):'<div>Tidak ada catatan.</div>');
+}
+function calNav(id,dx){const s=calSt[id];s.m+=dx;if(s.m<0){s.m=11;s.y--;}if(s.m>11){s.m=0;s.y++;}s.sel=null;renderCal(id,s.type||null);}
+function calPick(id,k){const s=calSt[id];s.sel=k;renderCal(id,s.type||null);}
+function remItem(r){
+  let body;
+  if(r.type==='service'){const s=r.info;
+    body=(s.byDate?`Jadwal ${fmtDateID(s.rec.due)} ${dueBadge(s.dDays,false)}`:'')+(s.byDate&&s.byKm?'<br>':'')+(s.byKm?`<span class="pill ${s.kmLeft<=0?'bad':'warn'}">${s.kmLeft<=0?'Lewat '+nf(-s.kmLeft):'Sisa '+nf(s.kmLeft)} km</span> target ${nf(s.nk)} km · KM kini ${nf(s.cur)}`:'');
+  } else body=`${dueBadge(r.days,false)} jatuh tempo ${fmtDateID(r.rec.due)}`;
+  return `<div class="rem" onclick="document.getElementById('remModal')?.remove();closeInfo();switchView('${r.type}')"><b>${TM[r.type].l}</b> — ${esc(r.v.name)} (${r.v.nopol}, ${r.v.jenis})<br>${body}</div>`;
+}
+function renderSvcList(){
+  const el=document.getElementById('list_service');
+  const items=docs.filter(d=>d.type==='service').sort((a,b)=>String(b.created).localeCompare(String(a.created)));
+  el.innerHTML='<div class="section-title">Jadwal & riwayat service</div>'+(items.length?items.map(d=>{
+    const a=stOf(d)==='aktif'&&activeSvc(d.key)===d,s=a?svcInfo(vOf(d.key)||{nopol:d.key}):null;
+    const lbl=a?(s.hit?'Perlu service':'Aktif'):(stOf(d)==='selesai'?'Selesai':'Diganti');
+    return `<div class="card doc"><div class="top"><div><div class="plate">${dKey(d)}</div>
+      ${d.date||d.extra?`<div class="who">Service terakhir: ${d.date?fmtDateID(d.date):'-'}${d.extra?' · '+nf(d.extra)+' km':''}</div>`:''}
+      ${a?`<div class="who">Berikutnya: ${svcText(s)}</div>`:''}
+      ${d.amount?`<div class="who">Rp ${nf(d.amount)}</div>`:''}${d.note?`<div class="who">${esc(d.note)}</div>`:''}
+      </div><span class="pill ${a&&s.hit?'warn':'ok'}">${lbl}</span></div>
+      <div class="doc-act">${a?`<button class="btn keluar" onclick="openComplete('${d.id}')">Selesaikan service</button>`:''}${d.file?`<a class="btn secondary" href="${esc(d.file)}" target="_blank" rel="noopener">Lihat PDF</a>`:''}<button class="btn ghost" onclick="delDoc('${d.id}')">Hapus</button></div></div>`;
+  }).join(''):'<div class="empty-state"><div class="ic">🔧</div>Belum ada jadwal. Isi form di atas.</div>');
+}
+function openComplete(id){
+  const d=docs.find(x=>x.id===id),k=curKm(d.key),o=document.createElement('div');
+  o.className='modal-overlay';o.id='cmpModal';
+  o.innerHTML=`<div class="modal"><button class="close" onclick="this.closest('.modal-overlay').remove()">✕</button><h2 style="margin-bottom:6px">Selesaikan Service</h2>
+  <p style="margin:0 0 12px;color:var(--ink-soft);font-size:13px">${esc(vLabel(d.key))}. Isi data service yang dilakukan dan jadwal berikutnya — pengingat hilang setelah disimpan.</p>
+  <div class="grid-2"><div class="field"><label>Tanggal service dilakukan</label><input type="date" id="c_date" class="mono" value="${nowDate()}"></div>
+  <div class="field"><label>KM saat service</label><input type="number" id="c_km" class="mono" value="${k||''}"></div></div>
+  <div class="field"><label>Upload PDF tagihan / estimasi (wajib)</label><input type="file" id="c_file" accept="application/pdf"></div>
+  <div class="grid-2"><div class="field"><label>Service berikutnya (tanggal)</label><input type="date" id="c_due" class="mono"></div>
+  <div class="field"><label>Service berikutnya (KM)</label><input type="number" id="c_nk" class="mono"></div></div>
+  <div class="field"><label>Biaya (Rp)</label><input type="number" id="c_amt" class="mono"></div>
+  <div class="field"><label>Bengkel / catatan</label><input id="c_note"></div>
+  <button class="btn keluar" id="c_btn" onclick="completeSvc('${id}')">Simpan & update jadwal</button></div>`;
+  document.body.appendChild(o);
+}
+async function completeSvc(id){
+  const g=s=>document.getElementById('c_'+s).value.trim(),fi=document.getElementById('c_file').files[0],btn=document.getElementById('c_btn');
+  const km=parseInt(g('km'),10),nk=g('nk'),due=g('due');
+  if(!g('date')||isNaN(km)) return toast('Isi tanggal dan KM saat service');
+  if(!fi) return toast('Upload PDF tagihan / estimasi dulu');
+  if(fi.type!=='application/pdf') return toast('File harus berformat PDF');
+  if(!due&&!nk) return toast('Isi jadwal berikutnya (tanggal dan/atau KM)');
+  if(nk&&parseInt(nk,10)<=km) return toast('KM berikutnya harus lebih besar dari KM service');
+  btn.disabled=true;btn.textContent='Menyimpan...';
+  try{
+    const file=await readFile(fi);
+    const j=await postDoc({action:'completeService',id,done:{date:g('date'),km:String(km),amount:g('amt'),note:g('note')},next:{due,nextKm:nk},file});
+    if(!j.ok) throw new Error(j.error||'Gagal menyimpan');
+    document.getElementById('cmpModal').remove();toast('Service diperbarui · pengingat dimatikan');await loadDocs();
+  }catch(e){toast(e.message);btn.disabled=false;btn.textContent='Simpan & update jadwal';}
+}
+function closeInfo(){document.getElementById('infoModal')?.remove();}
+function showInfo(k){
+  const today=nowDate(),empty='<div class="empty-state" style="padding:24px">Tidak ada data.</div>';
+  const trips=k==='today'?tripIndex.filter(t=>cleanDateValue(t.keluar?.tanggal)===today||cleanDateValue(t.masuk?.tanggal)===today):tripIndex.filter(t=>t.status==='keluar-only');
+  let ttl,b;
+  if(k==='veh'){ttl='Kendaraan';b=VEHICLES.map(v=>{const c=curKm(v.nopol),p=latest('stnk',v.nopol);
+    return `<div class="rem" style="border-left-color:#1D63F0;cursor:default"><b>${v.nopol}</b> — ${v.name} (${v.jenis})<br>KM terakhir: ${c!=null?nf(c):'-'}<br>Pajak: ${p?fmtDateID(p.due)+' '+dueBadge(daysTo(p.due),!!p.file):'belum ada data'}<br>Service: ${svcText(svcInfo(v))}</div>`;}).join('');}
+  else if(k==='rem'){ttl='Perlu Perhatian';const r=getReminders();b=r.length?r.map(remItem).join(''):empty;}
+  else{ttl=k==='today'?'Checklist Hari Ini':'Sedang Keluar';
+    b=trips.length?trips.map(t=>`<div class="rem" style="border-left-color:${k==='out'?'#7C4DFF':'#12A37F'}" onclick="closeInfo();openDetail('${t.id}')"><b>${esc(t.nopol)}</b> — ${esc(t.pemakai)} · ${esc(t.dept)}<br>Keluar: ${t.keluar?cleanTimeValue(t.keluar.jam)+' · KM '+(t.keluar.km||'-'):'-'} | Masuk: ${t.masuk?cleanTimeValue(t.masuk.jam)+' · KM '+(t.masuk.km||'-'):'belum'}${k==='out'?`<br><button class="btn masuk" style="margin-top:8px;padding:8px" onclick="event.stopPropagation();closeInfo();startChecklistMasukFromHistory('${t.id}')">Isi Checklist Masuk</button>`:''}</div>`).join(''):empty;}
+  const o=document.createElement('div');o.className='modal-overlay';o.id='infoModal';o.onclick=e=>{if(e.target===o)closeInfo();};
+  o.innerHTML=`<div class="modal"><button class="close" onclick="closeInfo()">✕</button><h2 style="margin-bottom:12px">${ttl}</h2>${b}</div>`;
+  document.body.appendChild(o);
+}
+function renderDash(){
+  const el=document.getElementById('view-dash');if(!el)return;
+  const rem=getReminders(),today=nowDate();
+  const todayN=tripIndex.filter(t=>cleanDateValue(t.keluar?.tanggal)===today||cleanDateValue(t.masuk?.tanggal)===today).length;
+  const out=tripIndex.filter(t=>t.status==='keluar-only').length,nM=VEHICLES.filter(v=>v.jenis==='Mobil').length;
+  const st=[['veh','🚗',VEHICLES.length,'Total Kendaraan',`${nM} mobil · ${VEHICLES.length-nM} motor`,'blue'],['today','📋',todayN,'Checklist Hari Ini','trip tercatat hari ini','green'],['rem','⚠️',rem.length,'Perlu Perhatian','STNK / service','orange'],['out','🚪',out,'Sedang Keluar','belum checklist masuk','purple']];
+  el.innerHTML=`<div class="hdr"><h2>Dashboard</h2><p>Ringkasan status kendaraan BC Campang Raya. Ketuk kartu untuk detail.</p></div>
+    <div class="stats">${st.map(s=>`<button class="stat ${s[5]}" onclick="showInfo('${s[0]}')"><div class="ico">${s[1]}</div><small>${s[3]}</small><b>${s[2]}</b><small>${s[4]}</small></button>`).join('')}</div>
+    ${rem.length?`<div class="card"><div class="section-title">Pengingat</div>${rem.map(remItem).join('')}</div>`:''}
+    <div class="card"><div class="section-title">Kendaraan</div>${VEHICLES.map(v=>{const bad=rem.some(r=>r.v.nopol===v.nopol),c=curKm(v.nopol);
+      return `<div class="vrow"><div class="info"><b>${v.nopol}</b><span>${v.name} · ${v.jenis}${c!=null?' · KM '+nf(c):''}</span></div><span class="pill ${bad?'warn':'ok'}">${bad?'Perlu Perhatian':'Baik'}</span><button class="btn keluar" onclick="goChecklist('${v.nopol}')">Checklist</button></div>`;}).join('')}</div>
+    <div class="card"><div class="section-title">Kalender Jadwal</div><div id="dashCal"></div></div>`;
+  renderCal('dashCal',null);
+}
+function renderAll(){renderDash();['stnk','service','sim'].forEach(t=>{renderList(t);renderCal('cal_'+t,t);});}
+function goChecklist(n){switchView('baru');setSelectedNopol(n);}
+function showReminderPopup(){
+  const rem=getReminders();if(remShown||!rem.length)return;remShown=true;
+  const o=document.createElement('div');o.className='modal-overlay';o.id='remModal';
+  o.innerHTML=`<div class="modal"><button class="close" onclick="this.closest('.modal-overlay').remove()">✕</button><h2 style="margin-bottom:6px">Pengingat H-1 Bulan</h2><p class="who" style="margin:0 0 12px;color:var(--ink-soft);font-size:13px">Upload PDF STNK / estimasi service agar pengingat berhenti.</p>${rem.map(remItem).join('')}<button class="btn ghost" onclick="this.closest('.modal-overlay').remove()">Tutup</button></div>`;
+  document.body.appendChild(o);
+}
+function switchView(v){
+  document.querySelectorAll('.view').forEach(e=>e.classList.toggle('active',e.id==='view-'+v));
+  document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active',b.dataset.v===v));
+  if(v==='riwayat') renderHistory();
+  if(v==='dash') refreshIndex().then(renderDash);
+  window.scrollTo(0,0);
+}
+function initDocs(){['stnk','service','sim'].forEach(buildDocForm);renderAll();Promise.all([refreshIndex(),loadDocs()]).then(()=>{renderAll();showReminderPopup();});}
 </script>
 </body>
 </html>
