@@ -1,0 +1,1762 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>SEVEN Vehicle Checklist — BC Campang Raya</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ECEEE9;
+  --surface:#FFFFFF;
+  --surface-2:#F6F5F0;
+  --ink:#20261F;
+  --ink-soft:#5B6459;
+  --line:#D6D8CE;
+  --keluar:#B84E17;
+  --keluar-soft:#F3DECB;
+  --masuk:#1E6B58;
+  --masuk-soft:#D7E7E0;
+  --danger:#A3332A;
+  --danger-soft:#F1D8D2;
+  --stamp:#20261F;
+  --radius:10px;
+  --font-display:'Oswald',sans-serif;
+  --font-body:'Inter',system-ui,-apple-system,sans-serif;
+  --font-mono:'IBM Plex Mono',monospace;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--font-body);
+  -webkit-font-smoothing:antialiased;
+  padding-bottom:76px;
+}
+::selection{background:var(--keluar-soft);}
+h1,h2,h3{font-family:var(--font-display);letter-spacing:.02em;margin:0;}
+button{font-family:var(--font-body);}
+.mono{font-family:var(--font-mono);}
+
+/* ---------- Top bar ---------- */
+.topbar{
+  position:sticky;top:0;z-index:40;
+  background:var(--ink);color:#EFEEE7;
+  padding:14px 16px;
+  display:flex;align-items:center;gap:12px;
+  border-bottom:3px solid var(--keluar);
+}
+.topbar .stamp-mark{
+  width:38px;height:38px;border:2px solid #EFEEE7;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-display);font-weight:700;font-size:12px;
+  transform:rotate(-8deg);flex:none;
+}
+.topbar .titles{flex:1;min-width:0;}
+.topbar .titles h1{font-size:17px;line-height:1.2;color:#fff;}
+.topbar .titles p{margin:0;font-size:11.5px;color:#c9cfc4;font-family:var(--font-mono);}
+.topbar .badge-online{
+  font-size:10px;font-family:var(--font-mono);color:#c9cfc4;border:1px solid #454e42;
+  padding:3px 7px;border-radius:20px;white-space:nowrap;
+}
+
+/* ---------- Layout ---------- */
+.app{max-width:920px;margin:0 auto;padding:16px;}
+.view{display:none;}
+.view.active{display:block;animation:fade .18s ease;}
+@keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+
+.card{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:16px;
+  margin-bottom:14px;
+}
+.section-title{
+  font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--ink-soft);
+  font-family:var(--font-mono);margin-bottom:10px;display:flex;align-items:center;gap:8px;
+}
+.section-title::after{content:"";flex:1;height:1px;background:var(--line);}
+
+/* ---------- Mode toggle (stamp buttons) ---------- */
+.mode-toggle{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.mode-btn{
+  border:2px solid var(--line);background:var(--surface);border-radius:var(--radius);
+  padding:16px 10px;cursor:pointer;text-align:center;transition:.15s;
+}
+.mode-btn .lbl{
+  font-family:var(--font-display);font-size:19px;letter-spacing:.06em;font-weight:700;
+  transform:rotate(-2deg);display:inline-block;
+}
+.mode-btn .sub{display:block;font-size:11px;color:var(--ink-soft);margin-top:4px;font-family:var(--font-mono);}
+.mode-btn.keluar.active{border-color:var(--keluar);background:var(--keluar-soft);}
+.mode-btn.keluar.active .lbl{color:var(--keluar);}
+.mode-btn.masuk.active{border-color:var(--masuk);background:var(--masuk-soft);}
+.mode-btn.masuk.active .lbl{color:var(--masuk);}
+
+/* ---------- Form ---------- */
+.field{margin-bottom:12px;}
+.field label{display:block;font-size:12.5px;color:var(--ink-soft);margin-bottom:5px;font-weight:500;}
+.field input, .field select, .field textarea{
+  width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:8px;
+  font-size:15px;background:var(--surface-2);color:var(--ink);font-family:var(--font-body);
+}
+.field input.mono, .field select.mono{font-family:var(--font-mono);}
+.field textarea{resize:vertical;min-height:60px;}
+.field input:focus, .field select:focus, .field textarea:focus{outline:2px solid var(--keluar);outline-offset:1px;background:#fff;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+@media (max-width:480px){.grid-3{grid-template-columns:1fr 1fr;}}
+
+/* ---------- Checklist 20 komponen ---------- */
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--ink-soft);margin-bottom:8px;font-family:var(--font-mono);}
+.legend span b{color:var(--ink);}
+.checklist-row{
+  display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);
+}
+.checklist-row:last-child{border-bottom:none;}
+.checklist-row .num{font-family:var(--font-mono);font-size:11px;color:var(--ink-soft);width:18px;flex:none;}
+.checklist-row .name{flex:1;font-size:13.5px;}
+.status-pick{display:flex;gap:4px;flex:none;}
+.status-pick button{
+  width:30px;height:30px;border-radius:6px;border:1.5px solid var(--line);background:var(--surface-2);
+  font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--ink-soft);cursor:pointer;
+}
+.status-pick button.sel-B.active{background:var(--masuk);border-color:var(--masuk);color:#fff;}
+.status-pick button.sel-R.active{background:var(--danger);border-color:var(--danger);color:#fff;}
+.status-pick button.sel-H.active{background:#7A6A1E;border-color:#7A6A1E;color:#fff;}
+.status-pick button.sel-T.active{background:var(--ink-soft);border-color:var(--ink-soft);color:#fff;}
+
+/* ---------- Damage checkboxes ---------- */
+.chip-row{display:flex;gap:8px;flex-wrap:wrap;}
+.chip{
+  border:1.5px solid var(--line);border-radius:20px;padding:6px 12px;font-size:12.5px;
+  cursor:pointer;background:var(--surface-2);color:var(--ink-soft);user-select:none;
+}
+.chip.active{background:var(--danger-soft);border-color:var(--danger);color:var(--danger);font-weight:600;}
+
+/* ---------- Photos ---------- */
+.photo-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.photo-slot{
+  border:1.5px dashed var(--line);border-radius:8px;aspect-ratio:4/3;
+  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;
+  position:relative;overflow:hidden;background:var(--surface-2);cursor:pointer;
+}
+.photo-slot img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;}
+.photo-slot .plus{font-size:22px;color:var(--ink-soft);}
+.photo-slot .cap{font-size:11px;color:var(--ink-soft);text-align:center;padding:0 6px;}
+.photo-slot input{display:none;}
+.photo-slot .remove{
+  position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);color:#fff;border:none;
+  width:22px;height:22px;border-radius:50%;font-size:12px;cursor:pointer;z-index:2;
+}
+.broken{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  background:var(--surface-2);color:var(--ink-soft);
+  font-size:10px;text-align:center;padding:0 4px;text-decoration:none;
+  border-radius:6px;flex:none;
+}
+.broken .ic{font-size:16px;}
+.photo-slot .broken{
+  width:100%;height:100%;position:absolute;inset:0;border-radius:0;gap:4px;font-size:11px;padding:0 8px;
+}
+.photo-slot .broken .ic{font-size:18px;}
+
+/* ---------- Photo tabs (Form Masuk) ---------- */
+.photo-tabs{display:none;gap:8px;margin-bottom:10px;}
+.photo-tab{
+  flex:1;border:1.5px solid var(--line);background:var(--surface-2);border-radius:8px;
+  padding:9px 6px;font-size:12.5px;color:var(--ink-soft);cursor:pointer;font-weight:600;
+}
+.photo-tab.active{background:var(--masuk-soft);border-color:var(--masuk);color:var(--masuk);}
+
+/* ---------- Buttons ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  padding:12px 16px;border-radius:8px;border:1.5px solid var(--ink);
+  background:var(--ink);color:#fff;font-weight:600;font-size:14px;cursor:pointer;width:100%;
+}
+.btn.secondary{background:var(--surface);color:var(--ink);}
+.btn.keluar{background:var(--keluar);border-color:var(--keluar);}
+.btn.masuk{background:var(--masuk);border-color:var(--masuk);}
+.btn.ghost{background:transparent;border-color:var(--line);color:var(--ink-soft);}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+.btn-row{display:flex;flex-direction:column;gap:8px;margin-top:6px;}
+
+/* ---------- Bottom nav ---------- */
+.bottomnav{
+  position:fixed;bottom:0;left:0;right:0;z-index:50;
+  background:var(--surface);border-top:1px solid var(--line);
+  display:flex;padding:6px 10px calc(6px + env(safe-area-inset-bottom));
+  max-width:920px;margin:0 auto;
+}
+@media (min-width:920px){.bottomnav{left:50%;transform:translateX(-50%);}}
+.navbtn{
+  flex:1;background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:8px 4px;cursor:pointer;color:var(--ink-soft);font-size:11px;font-family:var(--font-body);
+}
+.navbtn .ic{font-size:19px;}
+.navbtn.active{color:var(--keluar);}
+
+/* ---------- History ---------- */
+.history-date-header{
+  font-family:var(--font-mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-soft);margin:22px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--line);
+}
+.history-date-header:first-child{margin-top:0;}
+.trip-card{
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+  padding:14px;margin-bottom:10px;cursor:pointer;
+}
+.trip-card .top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+.trip-card .plate{font-family:var(--font-mono);font-weight:600;font-size:15px;}
+.trip-card .who{font-size:12.5px;color:var(--ink-soft);margin-top:2px;}
+.stamp-badge{
+  font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:.08em;
+  padding:3px 9px;border-radius:4px;border:1.5px solid currentColor;transform:rotate(-3deg);white-space:nowrap;
+}
+.stamp-badge.open{color:var(--keluar);}
+.stamp-badge.closed{color:var(--masuk);}
+.trip-card .meta{display:flex;gap:14px;margin-top:8px;font-size:11.5px;color:var(--ink-soft);font-family:var(--font-mono);flex-wrap:wrap;}
+.trip-thumbs{display:flex;gap:6px;margin-top:8px;}
+.trip-thumbs img{width:44px;height:44px;object-fit:cover;border-radius:5px;border:1px solid var(--line);}
+
+.empty-state{text-align:center;padding:50px 16px;color:var(--ink-soft);}
+.empty-state .ic{font-size:34px;margin-bottom:10px;}
+
+.search-bar{display:flex;gap:8px;margin-bottom:14px;}
+.search-bar input{flex:1;}
+
+/* ---------- Detail / report ---------- */
+.report-box{
+  background:var(--stamp);color:#EFEEE7;border-radius:8px;padding:14px;
+  font-family:var(--font-mono);font-size:12.5px;white-space:pre-wrap;line-height:1.6;
+  max-height:340px;overflow-y:auto;
+}
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(20,24,18,.55);z-index:60;
+  display:flex;align-items:flex-end;justify-content:center;
+}
+@media (min-width:640px){.modal-overlay{align-items:center;}}
+.modal{
+  background:var(--bg);width:100%;max-width:640px;max-height:92vh;overflow-y:auto;
+  border-radius:16px 16px 0 0;padding:18px;
+}
+@media (min-width:640px){.modal{border-radius:16px;}}
+.modal .close{background:none;border:none;font-size:22px;color:var(--ink-soft);float:right;cursor:pointer;line-height:1;}
+.toast{
+  position:fixed;bottom:90px;left:50%;transform:translateX(-50%);
+  background:var(--ink);color:#fff;padding:10px 18px;border-radius:20px;font-size:13px;z-index:70;
+  opacity:0;transition:opacity .25s;pointer-events:none;
+}
+.toast.show{opacity:1;}
+.note{font-size:11.5px;color:var(--ink-soft);background:var(--surface-2);border:1px solid var(--line);
+  border-radius:8px;padding:10px 12px;margin-bottom:14px;}
+.note.warn{background:var(--danger-soft);border-color:var(--danger);color:var(--danger);}
+</style>
+<style>
+/* ===== SEVEN theme ===== */
+:root{--bg:#F3F6FB;--surface:#fff;--surface-2:#F6F8FC;--ink:#0B1F44;--ink-soft:#64748B;--line:#E1E7F0;--keluar:#1D63F0;--keluar-soft:#DCE8FF;--masuk:#12A37F;--masuk-soft:#D5F3EA;--danger:#E5484D;--danger-soft:#FDE3E4;--stamp:#0B1F44;--navy:#0A2150;--radius:14px;--font-display:'Inter',system-ui,sans-serif;}
+h1,h2,h3{font-weight:700;letter-spacing:0}
+.topbar{background:var(--navy);border-bottom:0;height:64px;padding:0 16px}
+.topbar .stamp-mark{border:0;transform:none;width:44px;height:30px;border-radius:0}
+.topbar .titles h1{font-size:20px;letter-spacing:.12em;line-height:1.1}
+.topbar .titles p,.topbar .badge-online{font-family:var(--font-body)}
+.section-title{font-family:var(--font-body);text-transform:none;letter-spacing:0;font-size:13px;font-weight:700;color:var(--ink)}
+.mode-btn .lbl{transform:none;letter-spacing:.04em}
+.stamp-badge{transform:none;border-radius:99px;font-family:var(--font-body)}
+.btn{border-radius:10px}
+.navbtn{font-size:9.5px;padding:8px 0}
+.hdr{margin:2px 0 14px}.hdr h2{font-size:22px}.hdr p{margin:2px 0 0;color:var(--ink-soft);font-size:13px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.stat{border-radius:14px;padding:14px;border:1px solid var(--line);background:var(--surface)}
+.stat .ico{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;margin-bottom:8px}
+.stat b{font-size:26px;display:block}.stat small{color:var(--ink-soft);font-size:11.5px}
+.blue .ico{background:#DCE8FF}.green .ico{background:#D5F3EA}.orange .ico{background:#FFEBC8}.purple .ico{background:#E9E1FF}
+.vrow{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.vrow:last-child{border-bottom:0}
+.vrow .info{flex:1;min-width:0}.vrow .info b{display:block;font-size:14px}.vrow .info span{font-size:12px;color:var(--ink-soft)}
+.vrow .btn{width:auto;padding:8px 14px}
+.pill{font-size:11px;font-weight:600;padding:3px 9px;border-radius:99px;white-space:nowrap;height:fit-content}
+.pill.ok{background:#D5F3EA;color:#0B7A5E}.pill.warn{background:#FFEBC8;color:#9A5B00}.pill.bad{background:#FDE3E4;color:#B3261E}
+.rem{padding:10px 12px;border:1px solid var(--line);border-left:4px solid #F59F00;border-radius:10px;margin-bottom:8px;font-size:13px;cursor:pointer;background:#fff;line-height:1.6}
+.doc .top{display:flex;justify-content:space-between;gap:8px}
+.doc-act{display:flex;gap:8px;margin-top:10px}.doc-act .btn{width:auto;flex:1;padding:9px;text-decoration:none}
+.cal-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.cal-h button{border:1px solid var(--line);background:#fff;border-radius:8px;width:34px;height:30px;font-size:16px;cursor:pointer}
+.cal-g{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center}
+.cal-g i{font-style:normal;font-size:11px;color:var(--ink-soft)}
+.cal-g button{border:0;background:var(--surface-2);border-radius:8px;padding:6px 0 4px;font-size:12.5px;color:var(--ink);min-height:40px;cursor:pointer}
+.cal-g button.tdy{outline:2px solid var(--keluar)}
+.cal-g em{display:flex;justify-content:center;gap:2px;height:6px;margin-top:3px}
+u{width:6px;height:6px;border-radius:50%;display:inline-block;text-decoration:none}
+.cal-ev{font-size:12.5px;margin-top:10px;line-height:1.7}.cal-ev u{margin-right:6px}
+button.stat{width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer;position:relative}
+button.stat::after{content:'›';position:absolute;right:14px;top:12px;font-size:20px;color:var(--ink-soft)}
+.cal-g button.sel{background:var(--keluar-soft)}
+.cal-ev .lnk{cursor:pointer;text-decoration:underline}
+.cal-lg{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:11.5px;margin-top:12px;color:var(--ink-soft)}.cal-lg u{margin-right:5px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.rp-chart{display:flex;gap:4px;height:170px;overflow-x:auto;padding-bottom:2px}
+.rp-col{flex:1;min-width:20px;display:flex;flex-direction:column}
+.rp-bars{flex:1;display:flex;align-items:flex-end;gap:1px;border-bottom:1px solid var(--line)}
+.rp-bars i{flex:1;border-radius:3px 3px 0 0;min-height:0}
+.rp-col span{font-size:10px;text-align:center;color:var(--ink-soft);height:16px;line-height:16px}
+.seg{display:flex;background:#E6ECF7;border-radius:12px;padding:4px;margin-bottom:14px}
+.seg button{flex:1;border:0;background:transparent;padding:10px;border-radius:9px;font:inherit;font-weight:600;font-size:13.5px;color:var(--ink-soft);cursor:pointer}
+.seg button.on{background:#fff;color:var(--keluar);box-shadow:0 1px 3px rgba(10,33,80,.15)}
+@media (min-width:900px){
+  body{padding-bottom:0}
+  .stats{grid-template-columns:repeat(4,1fr)}
+  .bottomnav{top:64px;bottom:0;left:0;right:auto;width:210px;max-width:none;transform:none;flex-direction:column;justify-content:flex-start;gap:4px;background:var(--navy);border:0;padding:16px 12px}
+  .navbtn{flex:none;flex-direction:row;gap:10px;padding:11px 12px;border-radius:8px;color:#C7D3EC;font-size:13.5px;justify-content:flex-start}
+  .navbtn.active{background:var(--keluar);color:#fff}
+  .app{margin:0 0 0 210px;max-width:none;padding:24px 28px}
+}
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="stamp-mark"><svg viewBox="0 0 48 32" width="44" height="30"><path d="M4 22l4-9c1-3 3-5 7-5h14c4 0 6 1 8 4l5 5c2 1 3 2 3 5v2H4z" fill="none" stroke="#4C8DFF" stroke-width="3" stroke-linejoin="round"/><circle cx="14" cy="25" r="3.5" fill="#0A2150" stroke="#4C8DFF" stroke-width="3"/><circle cx="36" cy="25" r="3.5" fill="#0A2150" stroke="#4C8DFF" stroke-width="3"/></svg></div>
+  <div class="titles">
+    <h1>SEVEN</h1>
+    <p id="siteLabel">Vehicle Checklist · BC Campang Raya</p>
+  </div>
+  <div class="badge-online" id="statusPill">● tersimpan</div>
+</div>
+
+<div class="app">
+
+  <!-- ============ VIEW: BARU ============ -->
+  <div class="view active" id="view-dash"></div>
+  <div class="view" id="view-dok"><div class="seg" id="dokSeg"><button data-t="stnk" onclick="setDokTab('stnk')">STNK &amp; Pajak</button><button data-t="sim" onclick="setDokTab('sim')">SIM</button></div><div id="view-stnk"></div><div id="view-sim" style="display:none"></div></div>
+  <div class="view" id="view-service"></div>
+  <div class="view" id="view-laporan"></div>
+
+  <div class="view" id="view-baru">
+
+    <div class="note" id="modeNote">Data checklist tersimpan dan dapat dilihat oleh semua security &amp; admin yang membuka aplikasi ini. Laporan bisa dikirim ke email <b>jatra_radinta@biznetnetworks.com</b> atau dibagikan ke WhatsApp setelah disimpan.</div>
+
+    <div class="mode-toggle">
+      <button class="mode-btn keluar active" id="btnModeKeluar" onclick="setMode('keluar')">
+        <span class="lbl">KELUAR</span>
+        <span class="sub">Kendaraan berangkat</span>
+      </button>
+      <button class="mode-btn masuk" id="btnModeMasuk" onclick="setMode('masuk')">
+        <span class="lbl">MASUK</span>
+        <span class="sub">Kendaraan kembali</span>
+      </button>
+    </div>
+
+    <!-- Masuk: pilih trip terbuka -->
+    <div class="card" id="openTripCard" style="display:none;">
+      <div class="section-title">Tutup checklist keluar yang sudah ada</div>
+      <div class="field">
+        <label>Pilih kendaraan yang sedang keluar</label>
+        <select id="openTripSelect" onchange="onOpenTripChange()">
+          <option value="">— Buat entri masuk manual (tanpa data keluar) —</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Data Kendaraan &amp; Pemakai</div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Kendaraan</label>
+          <select id="f_nopol" class="mono" onchange="onVehicleChange()"></select>
+        </div>
+        <div class="field">
+          <label>Departemen</label>
+          <select id="f_dept">
+            <option>Arco</option>
+            <option>Engineer</option>
+            <option>Sales</option>
+            <option>Operational</option>
+            <option>Lainnya</option>
+          </select>
+        </div>
+      </div>
+      <div class="field" id="customNopolField" style="display:none;">
+        <label>Nomor Polisi (manual)</label>
+        <input type="text" id="f_nopol_custom" class="mono" placeholder="BE 1234 XX" style="text-transform:uppercase;">
+      </div>
+      <div class="field">
+        <label>Nama Pemakai</label>
+        <input type="text" id="f_pemakai" placeholder="Nama driver/pemakai">
+      </div>
+      <div class="field">
+        <label>Keperluan</label>
+        <input type="text" id="f_keperluan" placeholder="Contoh: Mengerjakan tiket, antar barang, dll">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title" id="logSectionTitle">Data Log — Keluar</div>
+      <div class="grid-3">
+        <div class="field">
+          <label>Tanggal</label>
+          <input type="date" id="f_tanggal" class="mono">
+        </div>
+        <div class="field">
+          <label>Jam</label>
+          <input type="time" id="f_jam" class="mono">
+        </div>
+        <div class="field">
+          <label>KM</label>
+          <input type="number" id="f_km" class="mono" placeholder="60614">
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Bensin</label>
+          <select id="f_bensin" class="mono">
+            <option>E</option><option>1/8</option><option>1/4</option><option>1/2</option><option>3/4</option><option>F</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Nama Security (Pemeriksa)</label>
+          <select id="f_pemeriksa">
+            <option value="">Pilih pemeriksa</option>
+            <option>Diki Afrizal</option>
+            <option>Nasir Rulloh</option>
+            <option>Ibnu Diansyahputra</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Checklist Komponen</div>
+      <div class="legend">
+        <span><b>B</b> Baik</span><span><b>R</b> Rusak</span><span><b>H</b> Hilang</span><span><b>T</b> Tidak Ada</span>
+      </div>
+      <div id="checklistWrap"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Kondisi Cat / Body</div>
+      <div class="chip-row" id="damageChips"></div>
+      <div class="field" style="margin-top:10px;">
+        <label>Catatan posisi kerusakan (opsional)</label>
+        <textarea id="f_catatan" placeholder="Contoh: baret pintu kanan depan"></textarea>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Foto</div>
+      <div class="photo-tabs" id="photoTabs">
+        <button type="button" class="photo-tab active" data-tab="exterior" onclick="switchPhotoTab('exterior')">Foto Exterior</button>
+        <button type="button" class="photo-tab" data-tab="interior" onclick="switchPhotoTab('interior')">Foto Interior</button>
+      </div>
+      <div class="photo-grid" id="photoGrid"></div>
+    </div>
+
+    <button class="btn" id="btnSubmit" onclick="submitTrip()">Simpan Checklist</button>
+  </div>
+
+  <!-- ============ VIEW: RIWAYAT ============ -->
+  <div class="view" id="view-riwayat">
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="Cari nopol / nama pemakai..." oninput="renderHistoryList()">
+    </div>
+    <div id="historyList"></div>
+  </div>
+
+</div>
+
+<div class="bottomnav">
+  <button class="navbtn active" data-v="dash" onclick="switchView('dash')"><span class="ic">🏠</span>Beranda</button>
+  <button class="navbtn" data-v="baru" onclick="switchView('baru')"><span class="ic">📋</span>Checklist</button>
+  <button class="navbtn" data-v="dok" onclick="switchView('dok')"><span class="ic">🪪</span>Dokumen</button>
+  <button class="navbtn" data-v="service" onclick="switchView('service')"><span class="ic">🔧</span>Service</button>
+  <button class="navbtn" data-v="laporan" onclick="switchView('laporan')"><span class="ic">📊</span>Laporan</button>
+  <button class="navbtn" data-v="riwayat" onclick="switchView('riwayat')"><span class="ic">🗂️</span>Riwayat</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ====== KONFIGURASI FIREBASE ======
+   Ganti nilai di bawah ini dengan config project Firebase Anda sendiri.
+   Cara mendapatkannya: console.firebase.google.com -> buat project ->
+   Project settings -> tambah Web App -> salin objek firebaseConfig ke sini.
+   Selama masih berisi "GANTI...", aplikasi berjalan dalam MODE LOKAL
+   (data hanya tersimpan di HP masing-masing, tidak dibagikan ke security lain). */
+const firebaseConfig = {
+  apiKey: "GANTI_API_KEY",
+  authDomain: "GANTI_PROJECT.firebaseapp.com",
+  projectId: "GANTI_PROJECT_ID",
+  storageBucket: "GANTI_PROJECT.appspot.com",
+  messagingSenderId: "GANTI_SENDER_ID",
+  appId: "GANTI_APP_ID"
+};
+
+let db = null;
+let useFirebase = false;
+try{
+  if(firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith('GANTI') && typeof firebase !== 'undefined'){
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    useFirebase = true;
+  }
+}catch(err){ console.error('Firebase gagal diinisialisasi', err); useFirebase = false; }
+
+/* ====== KONFIGURASI GOOGLE APPS SCRIPT (pencatatan ke Spreadsheet) ======
+   1. Deploy file code.gs sebagai Web App (lihat komentar di code.gs).
+   2. Salin "Web app URL" hasil deploy, tempel di bawah ini menggantikan
+      "GANTI_DENGAN_URL_WEB_APP_APPS_SCRIPT".
+   Selama nilainya masih diawali "GANTI", pencatatan ke spreadsheet
+   otomatis dilewati (checklist tetap tersimpan seperti biasa). */
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwRrX8zCyEIeM20ocuXFl0GZihFpnbBnxZb8Pj6ibw1doTokI1_xMO_2Yhq6FCtLvRw/exec";
+
+async function recordToSheet(mode, detail){
+  if(!APPS_SCRIPT_URL || APPS_SCRIPT_URL.startsWith('GANTI_DENGAN')){
+    return {ok:false, skipped:true};
+  }
+  const blk = detail[mode] || {};
+  const payload = {
+    mode: mode,
+    tripId: detail.id,
+    nopol: detail.nopol,
+    dept: detail.dept,
+    pemakai: detail.pemakai,
+    keperluan: detail.keperluan,
+    tanggal: blk.tanggal,
+    jam: blk.jam,
+    km: blk.km,
+    bensin: blk.bensin,
+    pemeriksa: blk.pemeriksa,
+    checklist: blk.checklist,
+    damage: blk.damage,
+    catatan: blk.catatan,
+    geo: blk.geo,
+    photos: blk.photos
+  };
+  try{
+    // Content-Type text/plain sengaja dipakai agar browser tidak mengirim
+    // preflight OPTIONS (yang tidak ditangani Apps Script secara default).
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'text/plain;charset=utf-8'},
+      body: JSON.stringify(payload)
+    });
+    const json = await res.json();
+    return json;
+  }catch(err){
+    console.error('Gagal mencatat ke spreadsheet', err);
+    return {ok:false, error: (err && err.message) ? err.message : 'Tidak dapat menghubungi Apps Script.'};
+  }
+}
+
+/* Riwayat & detail trip sekarang dibaca langsung dari Spreadsheet lewat
+   Apps Script (action=list / action=detail) — tidak ada lagi penyimpanan
+   di localStorage HP. */
+function appsScriptConfigured(){
+  return !!(APPS_SCRIPT_URL && !APPS_SCRIPT_URL.startsWith('GANTI_DENGAN'));
+}
+/* Apps Script kadang lambat merespons (spreadsheet besar / koneksi
+   lambat). Tanpa batas waktu, fetch bisa "menggantung" lama sebelum
+   akhirnya gagal, terasa seperti aplikasi macet. FETCH_TIMEOUT_MS
+   membatasi ini supaya pesan error muncul cepat dan jelas. */
+const FETCH_TIMEOUT_MS = 15000;
+async function fetchWithTimeout_(url, options){
+  const controller = new AbortController();
+  const timer = setTimeout(()=>controller.abort(), FETCH_TIMEOUT_MS);
+  try{
+    return await fetch(url, {...(options||{}), signal: controller.signal});
+  } finally {
+    clearTimeout(timer);
+  }
+}
+async function fetchTripList(){
+  if(!appsScriptConfigured()) return [];
+  try{
+    const res = await fetchWithTimeout_(APPS_SCRIPT_URL + '?action=list&limit=300');
+    const json = await res.json();
+    return (json && json.ok && Array.isArray(json.trips)) ? json.trips : [];
+  }catch(err){
+    console.error('Gagal memuat riwayat dari spreadsheet', err);
+    return null; // null = gagal terhubung, beda dari [] = memang kosong
+  }
+}
+async function fetchTripDetail(id){
+  if(!appsScriptConfigured()) return null;
+  try{
+    const res = await fetchWithTimeout_(APPS_SCRIPT_URL + '?action=detail&id=' + encodeURIComponent(id));
+    const json = await res.json();
+    return (json && json.ok) ? json.trip : null;
+  }catch(err){
+    console.error('Gagal memuat detail dari spreadsheet', err);
+    return null;
+  }
+}
+
+const EMAIL_TO = "jatra_radinta@biznetnetworks.com";
+const SITE_LABEL = "BC Campang Raya - Jalan Tembesu 4";
+// Baris alamat untuk stempel foto, mengikuti format contoh (jalan, area,
+// kecamatan, kota, provinsi) — sesuaikan jika lokasi berbeda.
+const SITE_ADDRESS_LINES = [
+  "21a Jalan Tembesu 4",
+  "Campang Raya",
+  "Kecamatan Sukabumi",
+  "Kota Bandar Lampung",
+  "Lampung"
+];
+const VEHICLES = [
+  { nopol: "BE1058ABF", name: "Xenia X 1.3 2026", jenis: "Mobil", label: "Xenia X 1.3 2026 (BE1058ABF)" },
+  { nopol: "BE1350AAL", name: "Gran Max MB 1.3", jenis: "Mobil", label: "Gran Max MB 1.3 (BE1350AAL)" },
+  { nopol: "BE2089AHT", name: "Revo Fit", jenis: "Motor", label: "Revo Fit (BE2089AHT)" },
+  { nopol: "BE2582AJU", name: "Revo X", jenis: "Motor", label: "Revo X (BE2582AJU)" }
+];
+let KOMPONEN = [
+  "Label Oli","Head Unit","STNK","Safety Belt","Head Rest","Lampu Plafond","Karpet","Dongkrak",
+  "Segitiga Pengaman","Kunci Roda","Kaca Spion dalam","Kaca Spion Luar","Ban Serep","Velg Racing",
+  "Antena","Emblem/Stiker","Lampu Depan","Lampu Belakang","Lampu Spion","Apar"
+];
+const KOMPONEN_MOBIL = KOMPONEN.slice();
+const KOMPONEN_MOTOR = ["STNK","Lampu Depan","Lampu Belakang","Lampu Sein","Spion Kanan","Spion Kiri","Klakson","Rem Depan","Rem Belakang","Ban Depan","Ban Belakang","Rantai / Gir","Jok","Handle Gas & Kopling","Spakbor / Cover Body"];
+const DAMAGE_TYPES = ["Baret","Penyok","Retak","Pecah"];
+// Checklist Keluar: 4 foto dalam satu grid (tanpa tab).
+const PHOTO_SLOTS_KELUAR = [
+  {key:"interior", label:"Interior / Dashboard"},
+  {key:"km", label:"Odometer / KM"},
+  {key:"depan", label:"Tampak Depan"},
+  {key:"belakang", label:"Tampak Belakang"}
+];
+// Checklist Masuk: foto lebih lengkap, dibagi 2 tab (Exterior & Interior).
+const PHOTO_TABS_MASUK = {
+  exterior: [
+    {key:"depan", label:"Tampak Depan"},
+    {key:"belakang", label:"Tampak Belakang"},
+    {key:"kanan", label:"Sisi Kanan"},
+    {key:"kiri", label:"Sisi Kiri"}
+  ],
+  interior: [
+    {key:"km", label:"Odometer / KM"},
+    {key:"barisDepan", label:"Baris Depan"},
+    {key:"barisTengah", label:"Baris Tengah"}
+  ]
+};
+// Semua slot foto yang mungkin dipakai — dipakai untuk lookup label
+// (misal saat menampilkan riwayat) tanpa peduli mode/tab.
+const ALL_PHOTO_SLOTS = [...PHOTO_SLOTS_KELUAR, ...PHOTO_TABS_MASUK.exterior, ...PHOTO_TABS_MASUK.interior]
+  .reduce((acc,s)=>{ acc[s.key]=s.label; return acc; }, {});
+let activePhotoTab = 'exterior';
+
+let mode = "keluar";
+let currentPhotos = {};
+let currentStatus = {};
+let currentDamage = new Set();
+let geo = null;
+let tripIndex = [];
+
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+function pad(n){return n.toString().padStart(2,'0');}
+function nowDate(){const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
+function nowTime(){const d=new Date();return pad(d.getHours())+':'+pad(d.getMinutes());}
+/* Google Spreadsheet kadang otomatis mengubah nilai teks "2026-09-22" atau
+   "14:05" menjadi tipe Tanggal/Jam aslinya, yang lalu terbaca balik sebagai
+   string ISO panjang ("2026-09-22T00:00:00.000Z" / "1899-12-30T07:05:00.000Z").
+   Dua fungsi berikut membersihkan itu supaya tetap tampil benar walau
+   sumber datanya sudah "rusak" seperti itu. */
+function cleanDateValue(v){
+  if(!v) return '';
+  const s = String(v);
+  return s.includes('T') ? s.split('T')[0] : s;
+}
+function cleanTimeValue(v){
+  if(!v) return '';
+  const s = String(v);
+  const m = s.match(/T(\d{2}):(\d{2})/);
+  return m ? (m[1]+':'+m[2]) : s;
+}
+/* Nilai Bensin ("E","1/8","1/4","1/2","3/4","F") kena masalah yang sama:
+   pecahan seperti "1/2" atau "3/4" dibaca Spreadsheet sebagai TANGGAL
+   (2 Januari, 4 Maret, dst — format M/D) lalu tersimpan jadi Date, bukan
+   teks pecahan aslinya. "E" dan "F" tidak mengandung "/" jadi aman, tidak
+   kena masalah ini. Fungsi ini mendeteksi hasil salah-baca itu (string
+   ISO tengah malam WIB) dan mengembalikannya ke label pecahan semula. */
+function cleanBensinValue(v){
+  if(!v) return v;
+  const s = String(v);
+  if(!s.includes('T')) return s;
+  const d = new Date(s);
+  if(isNaN(d.getTime())) return s;
+  // Tersimpan sebagai tengah malam WIB (UTC+7) → tambahkan 7 jam ke waktu
+  // UTC-nya dulu supaya tanggal kalender (bulan/tanggal) yang didapat
+  // sesuai dengan pecahan M/D yang dimaksud semula.
+  const local = new Date(d.getTime() + 7*3600*1000);
+  const key = `${local.getUTCMonth()+1}/${local.getUTCDate()}`;
+  const known = ['1/8','1/4','1/2','3/4'];
+  return known.includes(key) ? key : s;
+}
+function fmtDateID(iso){
+  iso = cleanDateValue(iso);
+  if(!iso) return '-';
+  const days=['Minggu','Senin','Selasa','Rabu','Kamis',"Jumat",'Sabtu'];
+  const months=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  const [y,m,d]=iso.split('-').map(Number);
+  const dt=new Date(y,m-1,d);
+  if(isNaN(dt.getTime())) return iso;
+  return days[dt.getDay()]+', '+d+' '+months[m-1]+' '+y;
+}
+function fmtDateIDShort(iso){
+  iso = cleanDateValue(iso);
+  if(!iso) return '-';
+  const days=['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+  const months=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  const [y,m,d]=iso.split('-').map(Number);
+  const dt=new Date(y,m-1,d);
+  if(isNaN(dt.getTime())) return iso;
+  return days[dt.getDay()]+', '+d+' '+months[m-1]+' '+y;
+}
+/* Memecah teks jadi beberapa baris agar tidak terpotong di tepi kanvas. */
+function wrapCanvasText(ctx, text, maxWidth){
+  const words = String(text).split(' ');
+  const lines = [];
+  let current = '';
+  words.forEach(word=>{
+    const test = current ? current+' '+word : word;
+    if(current && ctx.measureText(test).width > maxWidth){
+      lines.push(current);
+      current = word;
+    } else {
+      current = test;
+    }
+  });
+  if(current) lines.push(current);
+  return lines;
+}
+
+/* ---------- Init form pieces ---------- */
+function buildChecklist(){
+  const wrap = document.getElementById('checklistWrap');
+  wrap.innerHTML='';
+  currentStatus = {};
+  KOMPONEN.forEach((name,i)=>{
+    currentStatus[i] = 'B';
+    const row=document.createElement('div');
+    row.className='checklist-row';
+    row.innerHTML = `
+      <span class="num">${i+1}.</span>
+      <span class="name">${name}</span>
+      <span class="status-pick" id="pick_${i}">
+        ${['B','R','H','T'].map(s=>`<button type="button" class="sel-${s} ${s==='B'?'active':''}" onclick="pickStatus(${i},'${s}')">${s}</button>`).join('')}
+      </span>`;
+    wrap.appendChild(row);
+  });
+}
+function pickStatus(i,val){
+  currentStatus[i]=val;
+  const holder=document.getElementById('pick_'+i);
+  [...holder.children].forEach(b=>b.classList.remove('active'));
+  holder.querySelector('.sel-'+val).classList.add('active');
+}
+
+function buildDamageChips(){
+  const wrap=document.getElementById('damageChips');
+  wrap.innerHTML='';
+  currentDamage = new Set();
+  DAMAGE_TYPES.forEach(d=>{
+    const chip=document.createElement('div');
+    chip.className='chip'; chip.textContent=d;
+    chip.onclick=()=>{
+      if(currentDamage.has(d)){currentDamage.delete(d);chip.classList.remove('active');}
+      else{currentDamage.add(d);chip.classList.add('active');}
+    };
+    wrap.appendChild(chip);
+  });
+}
+
+function currentPhotoSlotList(){
+  return mode==='masuk' ? PHOTO_TABS_MASUK[activePhotoTab] : PHOTO_SLOTS_KELUAR;
+}
+// Dipanggil saat mode berganti (Keluar/Masuk) atau form direset: mengosongkan
+// foto yang sudah diambil dan menampilkan grid slot yang sesuai mode.
+function buildPhotoSlots(){
+  currentPhotos = {};
+  activePhotoTab = 'exterior';
+  document.getElementById('photoTabs').style.display = mode==='masuk' ? 'flex' : 'none';
+  document.querySelectorAll('.photo-tab').forEach(b=>b.classList.toggle('active', b.dataset.tab==='exterior'));
+  renderPhotoGrid();
+}
+// Menggambar ulang grid untuk tab/slot yang sedang aktif TANPA menghapus
+// foto yang sudah diambil di tab lain (currentPhotos tetap dipertahankan).
+function renderPhotoGrid(){
+  const grid=document.getElementById('photoGrid');
+  grid.innerHTML='';
+  currentPhotoSlotList().forEach(slot=>{
+    const div=document.createElement('div');
+    div.className='photo-slot';
+    div.id='slot_'+slot.key;
+    if(currentPhotos[slot.key]){
+      div.innerHTML = `<img src="${currentPhotos[slot.key]}"><button type="button" class="remove" onclick="removePhoto(event,'${slot.key}')">✕</button>
+        <input type="file" accept="image/*" capture="environment" onchange="onPhotoChosen('${slot.key}', this)">`;
+    } else {
+      div.innerHTML = `
+        <span class="plus">＋</span>
+        <span class="cap">${slot.label}</span>
+        <input type="file" accept="image/*" capture="environment" onchange="onPhotoChosen('${slot.key}', this)">`;
+    }
+    div.onclick = (e)=>{ if(e.target.tagName!=='BUTTON') div.querySelector('input').click(); };
+    grid.appendChild(div);
+  });
+}
+function switchPhotoTab(tab){
+  activePhotoTab = tab;
+  document.querySelectorAll('.photo-tab').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+  renderPhotoGrid();
+}
+
+function onPhotoChosen(key, input){
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    const img = new Image();
+    img.onload = ()=>{
+      const canvas=document.createElement('canvas');
+      const maxW=1600;
+      const scale=Math.min(1, maxW/img.width);
+      canvas.width=Math.round(img.width*scale); canvas.height=Math.round(img.height*scale);
+      const ctx=canvas.getContext('2d');
+      ctx.imageSmoothingEnabled=true;
+      ctx.imageSmoothingQuality='high';
+      ctx.drawImage(img,0,0,canvas.width,canvas.height);
+
+      // ---- Stempel geotag: multi-baris, dibungkus otomatis agar tidak
+      // terpotong di tepi foto (format mengikuti contoh: tanggal/jam lebih
+      // besar, lalu alamat baris per baris dengan ukuran lebih kecil, lalu
+      // koordinat). Teks putih polos tanpa garis tepi/bayangan apa pun —
+      // font sans-serif mengikuti contoh gambar (pakai Inter, font yang
+      // sudah dipakai di seluruh halaman ini). ----
+      const STAMP_FONT = "'Inter', Arial, sans-serif";
+      const stampDate = document.getElementById('f_tanggal').value || nowDate();
+      const stampTime = document.getElementById('f_jam').value || nowTime();
+      const dateLine = fmtDateIDShort(stampDate)+'  '+stampTime;
+      const addressLines = [...SITE_ADDRESS_LINES];
+      if(geo) addressLines.push(`${geo.lat.toFixed(5)}, ${geo.lng.toFixed(5)}`);
+
+      const dateFs = Math.max(13, canvas.width*0.038);
+      const addrFs = Math.max(11, canvas.width*0.028);
+      const dateLineGap = dateFs*1.28;
+      const addrLineGap = addrFs*1.32;
+      const padX = Math.max(10, canvas.width*0.02);
+      const padBottom = addrFs*0.85;
+      const maxTextWidth = canvas.width - padX*2;
+
+      ctx.font = `500 ${dateFs}px ${STAMP_FONT}`;
+      const dateLines = wrapCanvasText(ctx, dateLine, maxTextWidth);
+      ctx.font = `500 ${addrFs}px ${STAMP_FONT}`;
+      let addrLines = [];
+      addressLines.forEach(raw=>{ addrLines = addrLines.concat(wrapCanvasText(ctx, raw, maxTextWidth)); });
+
+      const blockH = dateLines.length*dateLineGap + addrLines.length*addrLineGap;
+      ctx.fillStyle = '#FFFFFF';
+      ctx.textBaseline = 'alphabetic';
+      let y = canvas.height - padBottom - blockH;
+
+      ctx.font = `500 ${dateFs}px ${STAMP_FONT}`;
+      dateLines.forEach(ln=>{ y += dateLineGap; ctx.fillText(ln, padX, y); });
+
+      ctx.font = `500 ${addrFs}px ${STAMP_FONT}`;
+      addrLines.forEach(ln=>{ y += addrLineGap; ctx.fillText(ln, padX, y); });
+
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      currentPhotos[key] = dataUrl;
+      const slotDiv = document.getElementById('slot_'+key);
+      slotDiv.innerHTML = `<img src="${dataUrl}"><button type="button" class="remove" onclick="removePhoto(event,'${key}')">✕</button>
+        <input type="file" accept="image/*" capture="environment" onchange="onPhotoChosen('${key}', this)">`;
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+function removePhoto(e,key){
+  e.stopPropagation();
+  delete currentPhotos[key];
+  const label = ALL_PHOTO_SLOTS[key] || '';
+  const div=document.getElementById('slot_'+key);
+  if(!div) return;
+  div.innerHTML = `<span class="plus">＋</span><span class="cap">${label}</span>
+    <input type="file" accept="image/*" capture="environment" onchange="onPhotoChosen('${key}', this)">`;
+}
+
+/* ---------- Mode switching ---------- */
+function setMode(m){
+  mode = m;
+  document.getElementById('btnModeKeluar').classList.toggle('active', m==='keluar');
+  document.getElementById('btnModeMasuk').classList.toggle('active', m==='masuk');
+  document.getElementById('openTripCard').style.display = m==='masuk' ? 'block' : 'none';
+  document.getElementById('logSectionTitle').textContent = 'Data Log — ' + (m==='keluar'?'Keluar':'Masuk');
+  document.getElementById('btnSubmit').className = 'btn ' + (m==='keluar'?'keluar':'masuk');
+  document.getElementById('btnSubmit').textContent = m==='keluar' ? 'Simpan Checklist Keluar' : 'Simpan Checklist Masuk';
+  buildPhotoSlots();
+  let populatePromise = Promise.resolve();
+  if(m==='masuk') populatePromise = populateOpenTrips();
+  resetTimeFields();
+  return populatePromise;
+}
+function resetTimeFields(){
+  document.getElementById('f_tanggal').value = nowDate();
+  document.getElementById('f_jam').value = nowTime();
+}
+
+function buildVehicleSelect(){
+  const sel = document.getElementById('f_nopol');
+  sel.innerHTML = VEHICLES.map(v=>`<option value="${v.nopol}">${v.label}</option>`).join('') +
+    `<option value="__custom__">Lainnya (isi manual)</option>`;
+  onVehicleChange();
+}
+function onVehicleChange(){
+  const v = document.getElementById('f_nopol').value;
+  document.getElementById('customNopolField').style.display = v === '__custom__' ? 'block' : 'none';
+  const veh = VEHICLES.find(x=>x.nopol===v);
+  const next = (veh && veh.jenis==='Motor') ? KOMPONEN_MOTOR : KOMPONEN_MOBIL;
+  if(next !== KOMPONEN){ KOMPONEN = next; buildChecklist(); }
+}
+function getSelectedNopol(){
+  const sel = document.getElementById('f_nopol').value;
+  if(sel === '__custom__'){
+    return document.getElementById('f_nopol_custom').value.trim().toUpperCase();
+  }
+  return sel;
+}
+function setSelectedNopol(nopol){
+  const sel = document.getElementById('f_nopol');
+  const match = VEHICLES.find(v=>v.nopol===nopol);
+  if(match){ sel.value = nopol; onVehicleChange(); }
+  else{ sel.value = '__custom__'; onVehicleChange(); document.getElementById('f_nopol_custom').value = nopol||''; }
+}
+
+async function populateOpenTrips(){
+  const sel = document.getElementById('openTripSelect');
+  sel.innerHTML = '<option value="">— Buat entri masuk manual (tanpa data keluar) —</option>';
+  const list = await refreshIndex();
+  if(list === null){
+    toast('Gagal memuat data trip dari spreadsheet');
+    return;
+  }
+  tripIndex.filter(t=>t.status==='keluar-only').forEach(t=>{
+    const opt=document.createElement('option');
+    opt.value=t.id;
+    opt.textContent = `${t.nopol} — ${t.pemakai} (keluar ${fmtDateID(t.keluar?.tanggal)} ${t.keluar?.jam||''})`;
+    sel.appendChild(opt);
+  });
+}
+async function onOpenTripChange(){
+  const id = document.getElementById('openTripSelect').value;
+  if(!id) return;
+  // Data trip yang dipilih sudah ada di tripIndex (hasil refreshIndex),
+  // tidak perlu request tambahan ke spreadsheet.
+  const detail = tripIndex.find(t=>t.id===id) || await fetchTripDetail(id);
+  if(!detail) return;
+  setSelectedNopol(detail.nopol||'');
+  document.getElementById('f_dept').value = detail.dept||'Arco';
+  document.getElementById('f_pemakai').value = detail.pemakai||'';
+  document.getElementById('f_keperluan').value = detail.keperluan||'';
+  window._closingTripId = id;
+}
+
+/* ---------- Storage helpers ----------
+   Riwayat & detail trip 100% dibaca dari Google Spreadsheet lewat
+   Apps Script — tidak ada lagi data yang disimpan di localStorage HP.
+   Setiap "Simpan Checklist" langsung dikirim ke spreadsheet (recordToSheet),
+   dan itulah satu-satunya tempat datanya tersimpan. */
+/* Sebelumnya setiap pindah ke mode "Masuk" (untuk mengisi dropdown trip
+   yang masih keluar) memicu fetch penuh ke spreadsheet — ini salah satu
+   penyebab riwayat/aplikasi terasa lambat kalau dilakukan berulang kali
+   dalam waktu singkat. INDEX_CACHE_MS memberi jeda: dalam rentang waktu
+   ini, data yang sudah ada di memori dipakai ulang tanpa fetch baru.
+   Buka tab Riwayat selalu memaksa fetch terbaru (force=true) supaya data
+   yang ditampilkan tetap yang paling baru. */
+const INDEX_CACHE_MS = 20000;
+let lastIndexFetchAt = 0;
+async function refreshIndex(force){
+  const fresh = !force && tripIndex.length && (Date.now() - lastIndexFetchAt) < INDEX_CACHE_MS;
+  if(fresh) return tripIndex;
+  const list = await fetchTripList();
+  if(list !== null){ tripIndex = list; lastIndexFetchAt = Date.now(); }
+  return list; // null jika gagal terhubung ke spreadsheet
+}
+
+function genId(){ return 't' + Date.now() + Math.random().toString(36).slice(2,7); }
+
+function collectChecklist(){
+  const out = {};
+  KOMPONEN.forEach((name,i)=>{ out[name] = currentStatus[i] || 'B'; });
+  return out;
+}
+function collectLogBlock(){
+  return {
+    tanggal: document.getElementById('f_tanggal').value,
+    jam: document.getElementById('f_jam').value,
+    km: document.getElementById('f_km').value,
+    bensin: document.getElementById('f_bensin').value,
+    pemeriksa: document.getElementById('f_pemeriksa').value,
+    checklist: collectChecklist(),
+    damage: [...currentDamage],
+    catatan: document.getElementById('f_catatan').value,
+    photos: {...currentPhotos},
+    geo: geo
+  };
+}
+
+async function submitTrip(){
+  const nopol = getSelectedNopol();
+  const pemakai = document.getElementById('f_pemakai').value.trim();
+  const pemeriksa = document.getElementById('f_pemeriksa').value;
+  if(!nopol || !pemakai){
+    toast('Kendaraan & nama pemakai wajib diisi'); return;
+  }
+  if(!pemeriksa){
+    toast('Pilih nama security (pemeriksa)'); return;
+  }
+  if(!appsScriptConfigured()){
+    toast('Apps Script belum terhubung — periksa APPS_SCRIPT_URL di kode.');
+    return;
+  }
+  const btn = document.getElementById('btnSubmit');
+  btn.disabled = true; btn.textContent = 'Menyimpan...';
+
+  const id = (mode==='masuk' && window._closingTripId) ? window._closingTripId : genId();
+  const detail = {
+    id, nopol,
+    dept: document.getElementById('f_dept').value,
+    pemakai,
+    keperluan: document.getElementById('f_keperluan').value
+  };
+  detail[mode] = collectLogBlock();
+
+  // Batas kasar agar tidak mengirim payload yang tidak wajar besar
+  if(JSON.stringify(detail).length > 8000000){
+    toast('Foto terlalu besar untuk dikirim — hapus 1-2 foto lalu coba lagi.');
+    btn.disabled=false; btn.textContent = mode==='keluar'?'Simpan Checklist Keluar':'Simpan Checklist Masuk';
+    return;
+  }
+
+  const sheetResult = await recordToSheet(mode, detail);
+  btn.disabled=false;
+  if(!sheetResult.ok){
+    toast('Gagal mencatat ke spreadsheet: ' + (sheetResult.error||'Periksa koneksi internet.'));
+    btn.textContent = mode==='keluar'?'Simpan Checklist Keluar':'Simpan Checklist Masuk';
+    return;
+  }
+
+  toast('Checklist tersimpan ke spreadsheet');
+  postSaveKm(nopol);
+
+  // Jika ini menutup trip (masuk atas trip yang sudah keluar), ambil
+  // detail gabungan dari spreadsheet supaya laporan menampilkan Keluar +
+  // Masuk sekaligus — foto Masuk yang baru diambil tetap pakai versi asli
+  // (base64) di HP supaya bisa langsung dibagikan/diunduh.
+  let modalDetail = detail;
+  if(mode==='masuk' && id === window._closingTripId){
+    const merged = await fetchTripDetail(id);
+    if(merged){ merged.masuk = detail.masuk; modalDetail = merged; }
+  }
+
+  showReportModal(modalDetail);
+  resetForm();
+}
+
+function resetForm(){
+  buildVehicleSelect();
+  document.getElementById('f_nopol_custom').value='';
+  document.getElementById('f_pemakai').value='';
+  document.getElementById('f_keperluan').value='';
+  document.getElementById('f_catatan').value='';
+  document.getElementById('f_km').value='';
+  document.getElementById('f_pemeriksa').value='';
+  window._closingTripId = null;
+  buildChecklist(); buildDamageChips(); buildPhotoSlots(); resetTimeFields();
+  setMode('keluar');
+}
+
+/* ---------- Report text ---------- */
+function blockText(label, blk){
+  if(!blk) return '';
+  let exceptionsText = (typeof blk.checklistText === 'string')
+    ? blk.checklistText
+    : Object.entries(blk.checklist||{}).filter(([k,v])=>v!=='B').map(([k,v])=>`${k}: ${v}`).join(', ');
+  let txt = `Pemakaian Kendaraan (${label})\n`+
+    `Tanggal : ${fmtDateID(blk.tanggal)}\n`+
+    `Jam : ${cleanTimeValue(blk.jam)||'-'}\n`+
+    `KM : ${blk.km||'-'}\n`+
+    `Bensin : ${cleanBensinValue(blk.bensin)||'-'}\n`+
+    `Pemeriksa : ${blk.pemeriksa||'-'}\n`;
+  if(exceptionsText) txt += `Catatan komponen : ${exceptionsText}\n`;
+  if(blk.damage && blk.damage.length) txt += `Kondisi cat/body : ${blk.damage.join(', ')}\n`;
+  if(blk.catatan) txt += `Catatan : ${blk.catatan}\n`;
+  return txt;
+}
+function buildReportText(t){
+  let txt = `CHECKLIST KENDARAAN — BC CAMPANG RAYA\n`+
+    `Nopol : ${t.nopol}\nDept : ${t.dept}\nPemakai : ${t.pemakai}\nKeperluan : ${t.keperluan||'-'}\n\n`;
+  txt += blockText('Keluar', t.keluar);
+  if(t.masuk) txt += '\n' + blockText('Masuk', t.masuk);
+  else txt += '\nStatus: kendaraan masih di luar (belum checklist masuk)\n';
+  return txt;
+}
+
+/* ---------- Report modal + sharing ---------- */
+let modalTrip = null;
+function showReportModal(trip){
+  modalTrip = trip;
+  const overlay=document.createElement('div');
+  overlay.className='modal-overlay'; overlay.id='reportModal';
+  const allPhotos = getAllPhotos(trip);
+  const thumbsHtml = Object.values(allPhotos).map(src=>`<img src="${src}" style="width:56px;height:56px;object-fit:cover;border-radius:6px;border:1px solid var(--line);margin:2px;" onerror="markPhotoBroken_(this,'${src}',56)">`).join('');
+  overlay.innerHTML = `
+    <div class="modal">
+      <button class="close" onclick="closeModal()">✕</button>
+      <h2 style="margin-bottom:12px;">Ringkasan Laporan</h2>
+      <div class="report-box" id="reportBoxText">${buildReportText(trip)}</div>
+      <div style="display:flex;flex-wrap:wrap;margin-top:10px;">${thumbsHtml}</div>
+      <div class="btn-row">
+        ${!trip.masuk?`<button class="btn masuk" onclick="startChecklistMasuk(modalTrip)">✅ Isi Checklist Masuk untuk Trip Ini</button>`:''}
+        <button class="btn keluar" onclick="sendGmail()">📧 Kirim ke Email (Gmail) — ${EMAIL_TO}</button>
+        <button class="btn secondary" onclick="shareNative()">🖼️ Bagikan dengan Foto (WhatsApp / Email / Lainnya)</button>
+        <button class="btn secondary" onclick="shareWhatsappText()">💬 Bagikan Teks ke WhatsApp</button>
+        <button class="btn ghost" onclick="downloadAllPhotos()">⬇️ Unduh Semua Foto</button>
+        <button class="btn ghost" onclick="closeModal()">Tutup</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+function closeModal(){
+  const m=document.getElementById('reportModal');
+  if(m) m.remove();
+}
+function sendGmail(){
+  const subject = `Laporan Pemakaian Kendaraan - ${modalTrip.nopol} - ${fmtDateID(modalTrip.keluar?.tanggal || modalTrip.masuk?.tanggal)}`;
+  const body = buildReportText(modalTrip);
+  const url = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(EMAIL_TO)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  window.open(url, '_blank');
+}
+function shareWhatsappText(){
+  const text = buildReportText(modalTrip);
+  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+}
+/* Kalau foto dari Drive gagal dimuat (koneksi lambat/terputus, dsb),
+   tampilkan kotak "buka foto" yang tetap bisa ditap untuk membuka link
+   aslinya di tab baru — daripada ikon gambar rusak yang tidak bisa
+   diapa-apakan. */
+function markPhotoBroken_(imgEl, url, size){
+  if(!imgEl || !imgEl.parentElement) return;
+  const wrap = document.createElement('a');
+  wrap.href = url; wrap.target = '_blank'; wrap.rel = 'noopener';
+  wrap.className = 'broken';
+  wrap.style.width = (size||44)+'px';
+  wrap.style.height = (size||44)+'px';
+  wrap.onclick = (e)=>e.stopPropagation();
+  wrap.innerHTML = '<span class="ic">🖼️</span><span>Buka</span>';
+  imgEl.replaceWith(wrap);
+}
+function getAllPhotos(trip){
+  const merged = {...(trip.keluar?.photos||{}), ...(trip.masuk?.photos||{})};
+  const out = {};
+  Object.entries(merged).forEach(([k,v])=>{ if(v) out[k]=v; });
+  return out;
+}
+function dataURLtoFile(dataUrl, filename){
+  const arr = dataUrl.split(',');
+  const mime = arr[0].match(/:(.*?);/)[1];
+  const bstr = atob(arr[1]);
+  let n = bstr.length; const u8 = new Uint8Array(n);
+  while(n--){ u8[n] = bstr.charCodeAt(n); }
+  return new File([u8], filename, {type:mime});
+}
+// Foto yang sudah tersimpan di spreadsheet berupa link Google Drive
+// (bukan base64) — diunduh dulu lewat fetch() lalu diubah jadi File,
+// supaya tetap bisa dilampirkan saat dibagikan. Kalau link gagal diambil
+// (mis. tanpa akses/offline/CORS dibatasi), foto itu saja yang dilewati,
+// sisanya tetap lanjut dibagikan sebagai file.
+async function urlToFile(url, filename){
+  try{
+    const res = await fetch(url);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const blob = await res.blob();
+    return new File([blob], filename, {type: blob.type || 'image/jpeg'});
+  }catch(err){
+    console.error('Gagal mengambil foto untuk dibagikan:', url, err);
+    return null;
+  }
+}
+async function shareNative(){
+  const text = buildReportText(modalTrip);
+  const allPhotos = getAllPhotos(modalTrip);
+  const entries = Object.entries(allPhotos);
+  // Foto yang baru diambil di HP ini (base64) langsung dijadikan file.
+  // Foto dari spreadsheet (link Google Drive) diambil dulu lewat
+  // urlToFile() lalu ikut dilampirkan juga — supaya perlakuannya SAMA
+  // baik untuk laporan Checklist Keluar maupun Checklist Masuk, dan baik
+  // dibagikan langsung sesudah simpan maupun dibuka lagi dari Riwayat.
+  // Link foto TIDAK disertakan di teks laporan (sengaja dihapus agar
+  // laporan tetap ringkas) — foto tetap terlampir sebagai file bila ada.
+  const filePromises = entries.map(([k,src])=>{
+    return src.startsWith('data:') ? Promise.resolve(dataURLtoFile(src, k+'.jpg')) : urlToFile(src, k+'.jpg');
+  });
+  const files = (await Promise.all(filePromises)).filter(Boolean);
+  const skipped = entries.length - files.length;
+  try{
+    if(files.length && navigator.canShare && navigator.canShare({files}) ){
+      await navigator.share({text, files, title:'Laporan Pemakaian Kendaraan'});
+    } else if(navigator.share){
+      if(entries.length && !files.length){
+        toast('Foto tidak dapat dilampirkan (link tidak bisa diakses) — hanya teks yang dibagikan.');
+      } else if(skipped>0){
+        toast(`${skipped} foto tidak bisa diikutkan (link tidak dapat diakses).`);
+      }
+      await navigator.share({text, title:'Laporan Pemakaian Kendaraan'});
+    } else {
+      toast('Perangkat ini tidak mendukung berbagi langsung — gunakan tombol Gmail/WhatsApp.');
+    }
+  }catch(err){ /* user cancelled share sheet — ignore */ }
+}
+function downloadAllPhotos(){
+  const allPhotos = getAllPhotos(modalTrip);
+  const entries = Object.entries(allPhotos);
+  if(!entries.length){ toast('Tidak ada foto untuk diunduh'); return; }
+  entries.forEach(([k,src],i)=>{
+    setTimeout(()=>{
+      if(src.startsWith('data:')){
+        const a=document.createElement('a');
+        a.href=src; a.download = `${modalTrip.nopol}_${k}.jpg`;
+        document.body.appendChild(a); a.click(); a.remove();
+      } else {
+        // Link Google Drive lintas-origin — browser tidak bisa memaksa
+        // unduh langsung, jadi dibuka di tab baru untuk disimpan manual.
+        window.open(src, '_blank');
+      }
+    }, i*300);
+  });
+}
+
+/* ---------- History view ----------
+   Sebelumnya renderHistory() SELALU fetch ulang ke Apps Script setiap
+   kali dipanggil — termasuk setiap kali tab Riwayat dibuka DAN setiap
+   ketikan di kolom pencarian (oninput). Itu penyebab utama "lama sekali":
+   tiap huruf yang diketik nunggu network ke spreadsheet.
+   Sekarang dipisah:
+   - renderHistoryList()  → murni menyaring & menggambar dari tripIndex
+     yang sudah ada di memori, TANPA network sama sekali (dipakai untuk
+     pencarian, jadi terasa instan).
+   - renderHistory()      → dipanggil saat tab dibuka: kalau sudah ada
+     data di memori, langsung tampilkan itu dulu (instan) sambil di
+     belakang layar mengambil data terbaru, baru gambar ulang kalau
+     sudah selesai. Kalau belum ada data sama sekali, baru tampilkan
+     status "Memuat...". */
+function renderHistoryList(){
+  const list = document.getElementById('historyList');
+  const q = (document.getElementById('searchInput').value||'').toLowerCase();
+  let items = [...tripIndex].sort((a,b)=> new Date(b.updatedAt) - new Date(a.updatedAt));
+  if(q) items = items.filter(t => (t.nopol+' '+t.pemakai+' '+t.dept).toLowerCase().includes(q));
+  if(!items.length){
+    list.innerHTML = `<div class="empty-state"><div class="ic">🗂️</div>Belum ada riwayat checklist.</div>`;
+    return;
+  }
+  let lastDateKey = null;
+  const cardsHtml = items.map(t=>{
+    const isOpen = t.status==='keluar-only';
+    const allPhotos = Object.values(getAllPhotos(t)).slice(0,3);
+    const thumbs = allPhotos.map(src=>`<img src="${src}" loading="lazy" onerror="markPhotoBroken_(this,'${src}',44)">`).join('');
+    const groupDate = cleanDateValue(t.keluar?.tanggal || t.masuk?.tanggal || t.updatedAt);
+    let headerHtml = '';
+    if(groupDate !== lastDateKey){
+      lastDateKey = groupDate;
+      headerHtml = `<div class="history-date-header">${fmtDateID(groupDate)}</div>`;
+    }
+    return headerHtml + `
+      <div class="trip-card" onclick="openDetail('${t.id}')">
+        <div class="top">
+          <div>
+            <div class="plate">${t.nopol}</div>
+            <div class="who">${t.pemakai} · ${t.dept}</div>
+          </div>
+          <span class="stamp-badge ${isOpen?'open':'closed'}">${isOpen?'KELUAR':'SELESAI'}</span>
+        </div>
+        <div class="meta">
+          <span>Keluar: ${t.keluar?fmtDateID(t.keluar.tanggal)+' '+cleanTimeValue(t.keluar.jam):'-'}</span>
+          <span>Masuk: ${t.masuk?fmtDateID(t.masuk.tanggal)+' '+cleanTimeValue(t.masuk.jam):'-'}</span>
+        </div>
+        ${thumbs?`<div class="trip-thumbs">${thumbs}</div>`:''}
+        ${isOpen?`<button type="button" class="btn masuk" style="margin-top:10px;" onclick="startChecklistMasukFromHistory('${t.id}', event)">✅ Isi Checklist Masuk</button>`:''}
+      </div>`;
+  }).join('');
+  list.innerHTML = cardsHtml;
+}
+async function renderHistory(){
+  const list = document.getElementById('historyList');
+  if(!appsScriptConfigured()){
+    list.innerHTML = `<div class="empty-state"><div class="ic">⚠️</div>Apps Script belum terhubung — riwayat tidak dapat dimuat dari spreadsheet.</div>`;
+    return;
+  }
+  // Kalau sudah ada data di memori (dari kunjungan sebelumnya ke tab ini),
+  // langsung tampilkan itu dulu — instan, tanpa nunggu network — sambil
+  // di belakang layar diambil data terbaru. Kalau belum ada data sama
+  // sekali (baru buka aplikasi), baru tampilkan status "Memuat...".
+  if(tripIndex.length){
+    renderHistoryList();
+  } else {
+    list.innerHTML = `<div class="empty-state"><div class="ic">⏳</div>Memuat riwayat dari spreadsheet…</div>`;
+  }
+  const fetched = await refreshIndex(true);
+  if(fetched === null){
+    if(!tripIndex.length){
+      list.innerHTML = `<div class="empty-state"><div class="ic">⚠️</div>Gagal memuat riwayat — periksa koneksi internet, lalu coba lagi.</div>`;
+    } else {
+      toast('Gagal memuat riwayat terbaru — menampilkan data sebelumnya.');
+    }
+    return;
+  }
+  renderHistoryList();
+}
+async function openDetail(id){
+  const detail = await fetchTripDetail(id);
+  if(!detail){ toast('Gagal memuat detail dari spreadsheet'); return; }
+  showReportModal(detail);
+}
+
+/* ---------- Checklist Masuk otomatis dari trip Keluar ---------- */
+// Dipanggil dari kartu riwayat (trip masih ada di tripIndex, tanpa fetch
+// tambahan) — id lalu dicocokkan ke tripIndex untuk ambil data lengkapnya.
+function startChecklistMasukFromHistory(id, ev){
+  if(ev) ev.stopPropagation();
+  const t = tripIndex.find(x=>x.id===id);
+  if(!t){ toast('Data trip tidak ditemukan, coba muat ulang riwayat.'); return; }
+  startChecklistMasuk(t);
+}
+// Pindah ke form Checklist Baru, set mode Masuk, dan mengisi otomatis
+// field kendaraan/pemakai/keperluan + memilih trip ini di dropdown "Tutup
+// checklist keluar yang sudah ada" berdasarkan data checklist Keluar-nya.
+async function startChecklistMasuk(trip){
+  if(!trip) return;
+  closeModal();
+  switchView('baru');
+  await setMode('masuk');
+  window._closingTripId = trip.id;
+  setSelectedNopol(trip.nopol||'');
+  document.getElementById('f_dept').value = trip.dept||'Arco';
+  document.getElementById('f_pemakai').value = trip.pemakai||'';
+  document.getElementById('f_keperluan').value = trip.keperluan||'';
+  const sel = document.getElementById('openTripSelect');
+  if(sel) sel.value = trip.id;
+  toast('Form Masuk diisi otomatis dari data Keluar — lengkapi sisanya lalu simpan.');
+}
+
+/* ---------- View switching ---------- */
+
+/* ---------- Init ---------- */
+function initGeo(){
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(
+      pos=>{ geo = {lat:pos.coords.latitude, lng:pos.coords.longitude}; },
+      ()=>{ geo=null; },
+      {timeout:4000}
+    );
+  }
+}
+function applyConnectionStatus(){
+  const pill = document.getElementById('statusPill');
+  const note = document.getElementById('modeNote');
+  if(appsScriptConfigured()){
+    pill.textContent = '● tersambung ke spreadsheet';
+  } else {
+    pill.textContent = '● belum tersambung';
+    note.classList.add('warn');
+    note.innerHTML = '⚠️ APPS_SCRIPT_URL belum diisi dengan URL Web App yang valid. Checklist <b>tidak akan tercatat</b> ke spreadsheet sampai ini diperbaiki. Lihat komentar "KONFIGURASI GOOGLE APPS SCRIPT" di kode.';
+  }
+}
+window.addEventListener('DOMContentLoaded', ()=>{
+  buildVehicleSelect();
+  buildChecklist();
+  buildDamageChips();
+  buildPhotoSlots();
+  resetTimeFields();
+  applyConnectionStatus();
+  initGeo();
+  initDocs();
+});
+/* ===== SEVEN: Dashboard, STNK, Service Berkala, SIM, Pengingat ===== */
+const MONTHS=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+const TM={stnk:{c:'#1D63F0',l:'STNK & Pajak'},service:{c:'#F59F00',l:'Service Berkala'},sim:{c:'#7C4DFF',l:'SIM'}};
+const REMIND_DAYS=30; // H-1 bulan
+const REMIND_KM=1000;
+const CFG={
+  stnk:{t:'STNK & Pajak',sub:'Jatuh tempo pajak kendaraan dan arsip STNK.',key:'v',due:'Jatuh tempo pajak tahunan',extra:['Masa berlaku STNK 5 tahunan','date'],amount:'Biaya pajak (Rp)',note:'Catatan',file:'Upload PDF STNK / bukti bayar pajak',accept:'application/pdf',hint:'Pengingat muncul H-30 sebelum jatuh tempo dan berhenti setelah PDF diunggah. Setelah pajak diperpanjang, tambahkan data jatuh tempo tahun berikutnya.'},
+  service:{t:'Service Berkala',sub:'Pengingat service lewat tanggal ATAU kilometer, mana yang lebih dulu.',key:'v',date:'Tanggal service terakhir',due:'Jadwal service berikutnya (tanggal)',nextKm:'KM service berikutnya',dueOpt:true,extra:['KM saat service terakhir','number'],amount:'Biaya tagihan / estimasi (Rp)',note:'Bengkel / catatan',file:'Arsip PDF tagihan service terakhir (opsional)',accept:'application/pdf',hint:'Isi tanggal dan/atau KM berikutnya. Pengingat muncul H-30 sebelum tanggal, atau saat sisa ≤1.000 km (dihitung dari KM checklist keluar/masuk), mana yang lebih dulu. Pengingat hilang setelah service diselesaikan: upload PDF + isi jadwal berikutnya.'},
+  sim:{t:'SIM Pengendara',sub:'Arsip SIM A / SIM C pengendara.',key:'text',keyLabel:'Nama pengendara',due:'Berlaku sampai',extra:['Jenis SIM','sel:SIM A,SIM C'],note:'Catatan',file:'Upload foto / PDF SIM',accept:'application/pdf,image/*',hint:'File disimpan di Google Drive.'}
+};
+let docs=[],docsOk=false,remShown=false;
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const vOf=n=>VEHICLES.find(x=>x.nopol===n);
+const vLabel=n=>{const v=vOf(n);return v?`${v.name} · ${n}`:n;};
+const dKey=d=>d.type==='sim'?esc(d.key):esc(vLabel(d.key));
+function daysTo(iso){const p=cleanDateValue(iso).split('-').map(Number);if(p.length<3||isNaN(p[0]))return null;const t=new Date();t.setHours(0,0,0,0);return Math.round((new Date(p[0],p[1]-1,p[2])-t)/864e5);}
+function latest(type,key){return docs.filter(d=>d.type===type&&d.key===key&&d.due).sort((a,b)=>cleanDateValue(b.due).localeCompare(cleanDateValue(a.due)))[0];}
+const stOf=d=>d.status||(d.file?'selesai':'aktif');
+function curKm(n){const t=tripIndex.find(x=>x.nopol===n),b=t&&(t.masuk||t.keluar),k=parseInt(b&&b.km,10);return isNaN(k)?null:k;}
+function activeSvc(n){return docs.filter(d=>d.type==='service'&&d.key===n&&stOf(d)==='aktif').sort((a,b)=>String(b.created).localeCompare(String(a.created)))[0];}
+function svcInfo(v){
+  const rec=activeSvc(v.nopol);if(!rec)return null;
+  const dDays=rec.due?daysTo(rec.due):null,nk=parseInt(rec.nextKm,10)||null;
+  const cur=curKm(v.nopol)??(parseInt(rec.extra,10)||null);
+  const kmLeft=(nk&&cur!=null)?nk-cur:null;
+  const byDate=dDays!==null&&dDays<=REMIND_DAYS,byKm=kmLeft!==null&&kmLeft<=REMIND_KM;
+  return {rec,dDays,nk,cur,kmLeft,byDate,byKm,hit:byDate||byKm};
+}
+const nf=n=>Number(n).toLocaleString('id-ID');
+function svcText(s){
+  if(!s)return 'belum ada jadwal';
+  const p=[];
+  if(s.rec.due)p.push(`${fmtDateID(s.rec.due)} ${dueBadge(s.dDays,false)}`);
+  if(s.nk)p.push(`${nf(s.nk)} km `+(s.kmLeft!==null?`<span class="pill ${s.kmLeft<=REMIND_KM?'warn':'ok'}">sisa ${nf(s.kmLeft)} km</span>`:'(KM kini belum ada)'));
+  return p.join(' · ');
+}
+function getReminders(){
+  const out=[];
+  VEHICLES.forEach(v=>{
+    const r=latest('stnk',v.nopol);
+    if(r&&!r.file){const d=daysTo(r.due);if(d!==null&&d<=REMIND_DAYS)out.push({type:'stnk',v,rec:r,days:d});}
+    const s=svcInfo(v);if(s&&s.hit)out.push({type:'service',v,rec:s.rec,info:s});
+  });
+  return out;
+}
+function postSaveKm(nopol){
+  refreshIndex(true).then(()=>{renderDash();const v=vOf(nopol),s=v&&svcInfo(v);
+    if(s&&s.hit)setTimeout(()=>toast('Service '+v.name+' mendekati: '+(s.byKm?'sisa '+nf(s.kmLeft)+' km':'H-'+s.dDays)),2400);});
+}
+function dueBadge(d,hasFile){
+  if(d===null) return '';
+  const cls=hasFile?'ok':d<0?'bad':d<=REMIND_DAYS?'warn':'ok';
+  return `<span class="pill ${cls}">${d<0?'Lewat '+(-d)+' hari':d===0?'Hari ini':'H-'+d}</span>`;
+}
+
+/* ---------- Data ---------- */
+async function loadDocs(){
+  if(!appsScriptConfigured()) return;
+  try{
+    const r=await fetchWithTimeout_(APPS_SCRIPT_URL+'?action=docs');const j=await r.json();
+    docsOk=!!(j&&j.ok&&Array.isArray(j.docs)); // false jika Code.gs belum di-deploy ulang
+    if(docsOk) docs=j.docs;
+  }catch(e){console.error(e);docsOk=false;}
+  renderAll();
+}
+async function postDoc(body){
+  const r=await fetch(APPS_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)});
+  return r.json();
+}
+function readFile(f){return new Promise((res,rej)=>{
+  if(f.size>6e6) return rej(new Error('Ukuran file maksimal 6 MB'));
+  const r=new FileReader();r.onload=()=>res({name:f.name,data:r.result});r.onerror=()=>rej(new Error('Gagal membaca file'));r.readAsDataURL(f);
+});}
+
+/* ---------- Form ---------- */
+function buildDocForm(type){
+  const c=CFG[type],f=(l,i)=>`<div class="field"><label>${l}</label>${i}</div>`;
+  const k=c.key==='v'?`<select id="d_${type}_key">${VEHICLES.map(v=>`<option value="${v.nopol}">${v.label}</option>`).join('')}</select>`:`<input id="d_${type}_key" placeholder="Nama lengkap">`;
+  let ex='';
+  if(c.extra){const [l,t]=c.extra;ex=f(l,t.startsWith('sel:')?`<select id="d_${type}_extra">${t.slice(4).split(',').map(o=>`<option>${o}</option>`).join('')}</select>`:`<input id="d_${type}_extra" type="${t}" class="mono">`);}
+  document.getElementById('view-'+type).innerHTML=`
+    <div class="hdr"><h2>${c.t}</h2><p>${c.sub}</p></div>
+    <div class="card"><div class="section-title">Input ${c.t}</div>
+      ${f(c.keyLabel||'Kendaraan',k)}
+      ${c.date?f(c.date,`<input type="date" id="d_${type}_date" class="mono">`):''}
+      ${f(c.due,`<input type="date" id="d_${type}_due" class="mono">`)}
+      ${c.nextKm?f(c.nextKm,`<input type="number" id="d_${type}_nextKm" class="mono" placeholder="mis. 45000">`):''}
+      ${ex}
+      ${c.amount?f(c.amount,`<input type="number" id="d_${type}_amount" class="mono" placeholder="0">`):''}
+      ${c.note?f(c.note,`<input id="d_${type}_note">`):''}
+      ${f(c.file,`<input type="file" id="d_${type}_file" accept="${c.accept}">`)}
+      <div class="note">${c.hint}</div>
+      <button class="btn keluar" id="d_${type}_btn" onclick="saveDoc('${type}')">Simpan</button></div>
+    <div class="card"><div class="section-title">Kalender</div><div id="cal_${type}"></div></div>
+    <div id="list_${type}"></div>`;
+}
+async function saveDoc(type){
+  const c=CFG[type],g=s=>{const e=document.getElementById(`d_${type}_${s}`);return e?e.value.trim():'';};
+  const key=g('key'),due=g('due'),btn=document.getElementById(`d_${type}_btn`);
+  if(!key||(!due&&!(c.dueOpt&&g('nextKm')))) return toast(c.dueOpt?'Isi kendaraan dan tanggal / KM service berikutnya':(c.keyLabel||'Kendaraan')+' dan tanggal wajib diisi');
+  if(!docsOk) return toast('Belum terhubung — deploy ulang Code.gs terbaru di Apps Script');
+  const fi=document.getElementById(`d_${type}_file`).files[0];
+  btn.disabled=true;btn.textContent='Menyimpan...';
+  try{
+    if(fi&&c.accept==='application/pdf'&&fi.type!=='application/pdf') throw new Error('File harus berformat PDF');
+    const file=fi?await readFile(fi):null;
+    const j=await postDoc({action:'saveDoc',record:{type,key,date:g('date'),due,extra:g('extra'),nextKm:g('nextKm'),amount:g('amount'),note:g('note')},file});
+    if(!j.ok) throw new Error(j.error||'Gagal menyimpan');
+    toast(file?'Tersimpan · pengingat dimatikan':'Tersimpan');
+    ['date','due','nextKm','extra','amount','note','file'].forEach(s=>{const e=document.getElementById(`d_${type}_${s}`);if(e&&e.tagName!=='SELECT')e.value='';});
+    await loadDocs();
+  }catch(e){toast(e.message);}
+  btn.disabled=false;btn.textContent='Simpan';
+}
+async function attachDoc(id,input){
+  const f=input.files[0];if(!f)return;
+  try{
+    const file=await readFile(f);toast('Mengunggah...');
+    const j=await postDoc({action:'attachFile',id,file});
+    if(!j.ok) throw new Error(j.error||'Gagal mengunggah');
+    toast('File terunggah · pengingat dimatikan');await loadDocs();
+  }catch(e){toast(e.message);}
+}
+async function delDoc(id){
+  if(!confirm('Hapus data ini?')) return;
+  try{const j=await postDoc({action:'deleteDoc',id});if(!j.ok)throw new Error(j.error);await loadDocs();}catch(e){toast(e.message);}
+}
+
+/* ---------- Render ---------- */
+function renderList(type){
+  if(type==='service') return renderSvcList();
+  const c=CFG[type],el=document.getElementById('list_'+type);
+  const items=docs.filter(d=>d.type===type).sort((a,b)=>cleanDateValue(b.due).localeCompare(cleanDateValue(a.due)));
+  el.innerHTML='<div class="section-title">Data tersimpan</div>'+(items.length?items.map(d=>`
+    <div class="card doc"><div class="top"><div>
+      <div class="plate">${dKey(d)}</div>
+      <div class="who">${c.due}: ${fmtDateID(d.due)}</div>
+      ${d.date?`<div class="who">${c.date}: ${fmtDateID(d.date)}</div>`:''}
+      ${d.extra?`<div class="who">${c.extra[0]}: ${esc(cleanDateValue(d.extra))}</div>`:''}
+      ${d.amount?`<div class="who">Rp ${Number(d.amount).toLocaleString('id-ID')}</div>`:''}
+      ${d.note?`<div class="who">${esc(d.note)}</div>`:''}
+    </div>${dueBadge(daysTo(d.due),type!=='sim'&&!!d.file)}</div>
+    <div class="doc-act">${d.file?`<a class="btn secondary" href="${esc(d.file)}" target="_blank" rel="noopener">Lihat file</a>`:`<label class="btn keluar">Upload ${type==='sim'?'file':'PDF'}<input type="file" hidden accept="${c.accept}" onchange="attachDoc('${d.id}',this)"></label>`}<button class="btn ghost" onclick="delDoc('${d.id}')">Hapus</button></div></div>`).join(''):'<div class="empty-state"><div class="ic">📂</div>Belum ada data. Isi form di atas.</div>');
+}
+const KC={stnk:{c:'#1D63F0',l:'STNK / pajak berakhir'},service:{c:'#F59F00',l:'Jadwal service'},svch:{c:'#E8590C',l:'Riwayat service'},sim:{c:'#7C4DFF',l:'SIM berlaku sampai'},trip:{c:'#12A37F',l:'Checklist harian'}};
+const KIND_BY_TYPE={stnk:['stnk'],service:['service','svch'],sim:['sim']};
+const calSt={};
+function calEvents(type){
+  const ev={},add=(k,e)=>{k=cleanDateValue(k);if(k)(ev[k]=ev[k]||[]).push(e);};
+  docs.forEach(d=>{
+    if(type&&d.type!==type)return;
+    if(d.due)add(d.due,{kind:d.type,txt:KC[d.type].l+' — '+dKey(d)});
+    if(d.type==='service'&&stOf(d)==='selesai'&&d.date)add(d.date,{kind:'svch',txt:'Service dilakukan — '+dKey(d)+(d.extra?' · '+nf(d.extra)+' km':''),file:d.file});
+  });
+  if(!type)tripIndex.forEach(t=>[['Keluar',t.keluar],['Masuk',t.masuk]].forEach(([m,b])=>{
+    if(b&&b.tanggal)add(b.tanggal,{kind:'trip',id:t.id,txt:`${m} ${cleanTimeValue(b.jam)} — ${esc(t.nopol)} · ${esc(t.pemakai)}${b.km?' · KM '+esc(b.km):''}`});
+  }));
+  return ev;
+}
+function renderCal(id,type){
+  const el=document.getElementById(id);if(!el)return;
+  const n=new Date(),st=calSt[id]=calSt[id]||{y:n.getFullYear(),m:n.getMonth()};
+  st.type=type||'';st.ev=calEvents(type);
+  const first=new Date(st.y,st.m,1).getDay(),total=new Date(st.y,st.m+1,0).getDate(),today=nowDate();
+  let h=`<div class="cal-h"><button onclick="calNav('${id}',-1)">‹</button><b>${MONTHS[st.m]} ${st.y}</b><button onclick="calNav('${id}',1)">›</button></div><div class="cal-g">`+['Min','Sen','Sel','Rab','Kam','Jum','Sab'].map(x=>`<i>${x}</i>`).join('')+'<span></span>'.repeat(first);
+  for(let d=1;d<=total;d++){
+    const k=`${st.y}-${pad(st.m+1)}-${pad(d)}`,kinds=[...new Set((st.ev[k]||[]).map(e=>e.kind))];
+    h+=`<button class="${k===today?'tdy ':''}${k===st.sel?'sel':''}" onclick="calPick('${id}','${k}')">${d}<em>${kinds.map(x=>`<u style="background:${KC[x].c}"></u>`).join('')}</em></button>`;
+  }
+  const lg=(type?KIND_BY_TYPE[type]:Object.keys(KC)).map(k=>`<span><u style="background:${KC[k].c}"></u>${KC[k].l}</span>`).join('');
+  el.innerHTML=h+`</div><div class="cal-ev" id="${id}_ev"></div><div class="cal-lg">${lg}</div>`;
+  if(st.sel)fillCalDetail(id);
+}
+function fillCalDetail(id){
+  const st=calSt[id],list=st.ev[st.sel]||[];
+  document.getElementById(id+'_ev').innerHTML=`<b>${fmtDateID(st.sel)}</b>`+(list.length?list.map(e=>`<div class="ci${e.id?' lnk':''}"${e.id?` onclick="openDetail('${e.id}')"`:''}><u style="background:${KC[e.kind].c}"></u>${e.txt}${e.file?` · <a href="${esc(e.file)}" target="_blank" rel="noopener">PDF</a>`:''}</div>`).join(''):'<div>Tidak ada catatan.</div>');
+}
+function calNav(id,dx){const s=calSt[id];s.m+=dx;if(s.m<0){s.m=11;s.y--;}if(s.m>11){s.m=0;s.y++;}s.sel=null;renderCal(id,s.type||null);}
+function calPick(id,k){const s=calSt[id];s.sel=k;renderCal(id,s.type||null);}
+function remItem(r){
+  let body;
+  if(r.type==='service'){const s=r.info;
+    body=(s.byDate?`Jadwal ${fmtDateID(s.rec.due)} ${dueBadge(s.dDays,false)}`:'')+(s.byDate&&s.byKm?'<br>':'')+(s.byKm?`<span class="pill ${s.kmLeft<=0?'bad':'warn'}">${s.kmLeft<=0?'Lewat '+nf(-s.kmLeft):'Sisa '+nf(s.kmLeft)} km</span> target ${nf(s.nk)} km · KM kini ${nf(s.cur)}`:'');
+  } else body=`${dueBadge(r.days,false)} jatuh tempo ${fmtDateID(r.rec.due)}`;
+  return `<div class="rem" onclick="document.getElementById('remModal')?.remove();closeInfo();switchView('${r.type}')"><b>${TM[r.type].l}</b> — ${esc(r.v.name)} (${r.v.nopol}, ${r.v.jenis})<br>${body}</div>`;
+}
+function renderSvcList(){
+  const el=document.getElementById('list_service');
+  const items=docs.filter(d=>d.type==='service').sort((a,b)=>String(b.created).localeCompare(String(a.created)));
+  el.innerHTML='<div class="section-title">Jadwal & riwayat service</div>'+(items.length?items.map(d=>{
+    const a=stOf(d)==='aktif'&&activeSvc(d.key)===d,s=a?svcInfo(vOf(d.key)||{nopol:d.key}):null;
+    const lbl=a?(s.hit?'Perlu service':'Aktif'):(stOf(d)==='selesai'?'Selesai':'Diganti');
+    return `<div class="card doc"><div class="top"><div><div class="plate">${dKey(d)}</div>
+      ${d.date||d.extra?`<div class="who">Service terakhir: ${d.date?fmtDateID(d.date):'-'}${d.extra?' · '+nf(d.extra)+' km':''}</div>`:''}
+      ${a?`<div class="who">Berikutnya: ${svcText(s)}</div>`:''}
+      ${d.amount?`<div class="who">Rp ${nf(d.amount)}</div>`:''}${d.note?`<div class="who">${esc(d.note)}</div>`:''}
+      </div><span class="pill ${a&&s.hit?'warn':'ok'}">${lbl}</span></div>
+      <div class="doc-act">${a?`<button class="btn keluar" onclick="openComplete('${d.id}')">Selesaikan service</button>`:''}${d.file?`<a class="btn secondary" href="${esc(d.file)}" target="_blank" rel="noopener">Lihat PDF</a>`:''}<button class="btn ghost" onclick="delDoc('${d.id}')">Hapus</button></div></div>`;
+  }).join(''):'<div class="empty-state"><div class="ic">🔧</div>Belum ada jadwal. Isi form di atas.</div>');
+}
+function openComplete(id){
+  const d=docs.find(x=>x.id===id),k=curKm(d.key),o=document.createElement('div');
+  o.className='modal-overlay';o.id='cmpModal';
+  o.innerHTML=`<div class="modal"><button class="close" onclick="this.closest('.modal-overlay').remove()">✕</button><h2 style="margin-bottom:6px">Selesaikan Service</h2>
+  <p style="margin:0 0 12px;color:var(--ink-soft);font-size:13px">${esc(vLabel(d.key))}. Isi data service yang dilakukan dan jadwal berikutnya — pengingat hilang setelah disimpan.</p>
+  <div class="grid-2"><div class="field"><label>Tanggal service dilakukan</label><input type="date" id="c_date" class="mono" value="${nowDate()}"></div>
+  <div class="field"><label>KM saat service</label><input type="number" id="c_km" class="mono" value="${k||''}"></div></div>
+  <div class="field"><label>Upload PDF tagihan / estimasi (wajib)</label><input type="file" id="c_file" accept="application/pdf"></div>
+  <div class="grid-2"><div class="field"><label>Service berikutnya (tanggal)</label><input type="date" id="c_due" class="mono"></div>
+  <div class="field"><label>Service berikutnya (KM)</label><input type="number" id="c_nk" class="mono"></div></div>
+  <div class="field"><label>Biaya (Rp)</label><input type="number" id="c_amt" class="mono"></div>
+  <div class="field"><label>Bengkel / catatan</label><input id="c_note"></div>
+  <button class="btn keluar" id="c_btn" onclick="completeSvc('${id}')">Simpan & update jadwal</button></div>`;
+  document.body.appendChild(o);
+}
+async function completeSvc(id){
+  const g=s=>document.getElementById('c_'+s).value.trim(),fi=document.getElementById('c_file').files[0],btn=document.getElementById('c_btn');
+  const km=parseInt(g('km'),10),nk=g('nk'),due=g('due');
+  if(!g('date')||isNaN(km)) return toast('Isi tanggal dan KM saat service');
+  if(!fi) return toast('Upload PDF tagihan / estimasi dulu');
+  if(fi.type!=='application/pdf') return toast('File harus berformat PDF');
+  if(!due&&!nk) return toast('Isi jadwal berikutnya (tanggal dan/atau KM)');
+  if(nk&&parseInt(nk,10)<=km) return toast('KM berikutnya harus lebih besar dari KM service');
+  btn.disabled=true;btn.textContent='Menyimpan...';
+  try{
+    const file=await readFile(fi);
+    const j=await postDoc({action:'completeService',id,done:{date:g('date'),km:String(km),amount:g('amt'),note:g('note')},next:{due,nextKm:nk},file});
+    if(!j.ok) throw new Error(j.error||'Gagal menyimpan');
+    document.getElementById('cmpModal').remove();toast('Service diperbarui · pengingat dimatikan');await loadDocs();
+  }catch(e){toast(e.message);btn.disabled=false;btn.textContent='Simpan & update jadwal';}
+}
+function closeInfo(){document.getElementById('infoModal')?.remove();}
+function showInfo(k){
+  const today=nowDate(),empty='<div class="empty-state" style="padding:24px">Tidak ada data.</div>';
+  const trips=k==='today'?tripIndex.filter(t=>cleanDateValue(t.keluar?.tanggal)===today||cleanDateValue(t.masuk?.tanggal)===today):tripIndex.filter(t=>t.status==='keluar-only');
+  let ttl,b;
+  if(k==='veh'){ttl='Kendaraan';b=VEHICLES.map(v=>{const c=curKm(v.nopol),p=latest('stnk',v.nopol);
+    return `<div class="rem" style="border-left-color:#1D63F0;cursor:default"><b>${v.nopol}</b> — ${v.name} (${v.jenis})<br>KM terakhir: ${c!=null?nf(c):'-'}<br>Pajak: ${p?fmtDateID(p.due)+' '+dueBadge(daysTo(p.due),!!p.file):'belum ada data'}<br>Service: ${svcText(svcInfo(v))}</div>`;}).join('');}
+  else if(k==='rem'){ttl='Perlu Perhatian';const r=getReminders();b=r.length?r.map(remItem).join(''):empty;}
+  else{ttl=k==='today'?'Checklist Hari Ini':'Sedang Keluar';
+    b=trips.length?trips.map(t=>`<div class="rem" style="border-left-color:${k==='out'?'#7C4DFF':'#12A37F'}" onclick="closeInfo();openDetail('${t.id}')"><b>${esc(t.nopol)}</b> — ${esc(t.pemakai)} · ${esc(t.dept)}<br>Keluar: ${t.keluar?cleanTimeValue(t.keluar.jam)+' · KM '+(t.keluar.km||'-'):'-'} | Masuk: ${t.masuk?cleanTimeValue(t.masuk.jam)+' · KM '+(t.masuk.km||'-'):'belum'}${k==='out'?`<br><button class="btn masuk" style="margin-top:8px;padding:8px" onclick="event.stopPropagation();closeInfo();startChecklistMasukFromHistory('${t.id}')">Isi Checklist Masuk</button>`:''}</div>`).join(''):empty;}
+  const o=document.createElement('div');o.className='modal-overlay';o.id='infoModal';o.onclick=e=>{if(e.target===o)closeInfo();};
+  o.innerHTML=`<div class="modal"><button class="close" onclick="closeInfo()">✕</button><h2 style="margin-bottom:12px">${ttl}</h2>${b}</div>`;
+  document.body.appendChild(o);
+}
+function renderDash(){
+  const el=document.getElementById('view-dash');if(!el)return;
+  const rem=getReminders(),today=nowDate();
+  const todayN=tripIndex.filter(t=>cleanDateValue(t.keluar?.tanggal)===today||cleanDateValue(t.masuk?.tanggal)===today).length;
+  const out=tripIndex.filter(t=>t.status==='keluar-only').length,nM=VEHICLES.filter(v=>v.jenis==='Mobil').length;
+  const st=[['veh','🚗',VEHICLES.length,'Total Kendaraan',`${nM} mobil · ${VEHICLES.length-nM} motor`,'blue'],['today','📋',todayN,'Checklist Hari Ini','trip tercatat hari ini','green'],['rem','⚠️',rem.length,'Perlu Perhatian','STNK / service','orange'],['out','🚪',out,'Sedang Keluar','belum checklist masuk','purple']];
+  el.innerHTML=`<div class="hdr"><h2>Dashboard</h2><p>Ringkasan status kendaraan BC Campang Raya. Ketuk kartu untuk detail.</p></div>
+    <div class="stats">${st.map(s=>`<button class="stat ${s[5]}" onclick="showInfo('${s[0]}')"><div class="ico">${s[1]}</div><small>${s[3]}</small><b>${s[2]}</b><small>${s[4]}</small></button>`).join('')}</div>
+    ${rem.length?`<div class="card"><div class="section-title">Pengingat</div>${rem.map(remItem).join('')}</div>`:''}
+    <div class="card"><div class="section-title">Kendaraan</div>${VEHICLES.map(v=>{const bad=rem.some(r=>r.v.nopol===v.nopol),c=curKm(v.nopol);
+      return `<div class="vrow"><div class="info"><b>${v.nopol}</b><span>${v.name} · ${v.jenis}${c!=null?' · KM '+nf(c):''}</span></div><span class="pill ${bad?'warn':'ok'}">${bad?'Perlu Perhatian':'Baik'}</span><button class="btn keluar" onclick="goChecklist('${v.nopol}')">Checklist</button></div>`;}).join('')}</div>
+    <div class="card"><div class="section-title">Kalender Jadwal</div><div id="dashCal"></div></div>`;
+  renderCal('dashCal',null);
+}
+function renderAll(){renderDash();['stnk','service','sim'].forEach(t=>{renderList(t);renderCal('cal_'+t,t);});}
+function goChecklist(n){switchView('baru');setSelectedNopol(n);}
+function showReminderPopup(){
+  const rem=getReminders();if(remShown||!rem.length)return;remShown=true;
+  const o=document.createElement('div');o.className='modal-overlay';o.id='remModal';
+  o.innerHTML=`<div class="modal"><button class="close" onclick="this.closest('.modal-overlay').remove()">✕</button><h2 style="margin-bottom:6px">Pengingat H-1 Bulan</h2><p class="who" style="margin:0 0 12px;color:var(--ink-soft);font-size:13px">Upload PDF STNK / estimasi service agar pengingat berhenti.</p>${rem.map(remItem).join('')}<button class="btn ghost" onclick="this.closest('.modal-overlay').remove()">Tutup</button></div>`;
+  document.body.appendChild(o);
+}
+let dokTab='stnk';
+function setDokTab(t){
+  dokTab=t;
+  document.getElementById('view-stnk').style.display=t==='stnk'?'':'none';
+  document.getElementById('view-sim').style.display=t==='sim'?'':'none';
+  document.querySelectorAll('#dokSeg button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+}
+function switchView(v){
+  if(v==='stnk'||v==='sim'){setDokTab(v);v='dok';}
+  document.querySelectorAll('.view').forEach(e=>e.classList.toggle('active',e.id==='view-'+v));
+  document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active',b.dataset.v===v));
+  if(v==='riwayat') renderHistory();
+  if(v==='dash') refreshIndex().then(renderDash);
+  if(v==='laporan') refreshIndex(true).then(renderReport);
+  window.scrollTo(0,0);
+}
+function initDocs(){['stnk','service','sim'].forEach(buildDocForm);buildReport();setDokTab('stnk');renderAll();Promise.all([refreshIndex(),loadDocs()]).then(()=>{renderAll();renderReport();showReminderPopup();});}
+
+/* ===== Laporan (statistik + export PDF dari riwayat checklist) ===== */
+const sv=v=>String(v==null?'':v);
+const hasFinding=b=>!!(sv(b.checklistText).trim()||(b.damage&&b.damage.length));
+function findingText(t){
+  const p=[];
+  [['Keluar',t.keluar],['Masuk',t.masuk]].forEach(([m,b])=>{if(b&&hasFinding(b))p.push(m+': '+[sv(b.checklistText).trim(),(b.damage||[]).join(', ')].filter(Boolean).join(' | '));});
+  return p.join(' ; ');
+}
+const tripDist=x=>{const a=parseInt(x.keluar&&x.keluar.km,10),c=parseInt(x.masuk&&x.masuk.km,10);return(!isNaN(a)&&!isNaN(c)&&c>=a)?c-a:0;};
+function rpData(){
+  const f=document.getElementById('rp_from').value,t=document.getElementById('rp_to').value,v=document.getElementById('rp_veh').value;
+  const inR=b=>{const d=cleanDateValue(b.tanggal);return d&&d>=f&&d<=t;};
+  const trips=tripIndex.filter(x=>(!v||x.nopol===v)&&[x.keluar,x.masuk].some(b=>b&&inR(b)));
+  const checks=[];
+  trips.forEach(x=>[['keluar',x.keluar],['masuk',x.masuk]].forEach(([m,b])=>{if(b&&inR(b))checks.push({t:x,m,b,d:cleanDateValue(b.tanggal)});}));
+  const names=[...new Set([...VEHICLES.map(x=>x.nopol).filter(n=>!v||n===v),...trips.map(x=>x.nopol)])];
+  const veh=names.map(n=>{const ts=trips.filter(x=>x.nopol===n),cs=checks.filter(c=>c.t.nopol===n),o=vOf(n)||{};
+    return {n,nm:o.name||'-',j:o.jenis||'-',trip:ts.length,chk:cs.length,tem:cs.filter(c=>hasFinding(c.b)).length,km:ts.reduce((s,x)=>s+tripDist(x),0),last:curKm(n)};});
+  const tem=checks.filter(c=>hasFinding(c.b)).sort((a,b)=>b.d.localeCompare(a.d));
+  return {f,t,v,trips,checks,veh,tem,used:new Set(checks.map(c=>c.t.nopol)).size,km:veh.reduce((s,x)=>s+x.km,0)};
+}
+function rpBuckets(D){
+  const s=new Date(D.f+'T00:00:00'),n=Math.min(Math.round((new Date(D.t+'T00:00:00')-s)/864e5)+1,366),bk=[];
+  if(!(n>0))return bk;
+  const sz=n>31?7:1;
+  for(let i=0;i<n;i+=sz){const d=new Date(s);d.setDate(d.getDate()+i);bk.push({l:sz>1?`${d.getDate()}/${d.getMonth()+1}`:String(d.getDate()),k:0,m:0,f:0});}
+  D.checks.forEach(c=>{const i=Math.round((new Date(c.d+'T00:00:00')-s)/864e5);if(i<0||i>=n)return;const b=bk[Math.floor(i/sz)];if(c.m==='keluar')b.k++;else b.m++;if(hasFinding(c.b))b.f++;});
+  return bk;
+}
+function renderReport(){
+  const el=document.getElementById('rp_body');if(!el)return;
+  const D=rpData();
+  if(D.f>D.t){el.innerHTML='<div class="empty-state">Tanggal awal harus sebelum tanggal akhir.</div>';return;}
+  const st=[['📋',D.checks.length,'Total Pengecekan',`${D.trips.length} trip`,'blue'],['🚗',D.used,'Kendaraan Dipakai',`dari ${VEHICLES.length} kendaraan`,'green'],['⚠️',D.tem.length,'Temuan / Perbaikan',D.checks.length?Math.round(D.tem.length/D.checks.length*100)+'% dari pengecekan':'-','orange'],['🛣️',nf(D.km),'Total Jarak (km)','dari trip selesai','purple']];
+  const bk=rpBuckets(D),mx=Math.max(1,...bk.flatMap(b=>[b.k,b.m,b.f])),bar=(v,c,l)=>`<i title="${l}: ${v}" style="height:${v/mx*100}%;background:${c}"></i>`;
+  el.innerHTML=`<div class="stats">${st.map(s=>`<div class="stat ${s[4]}"><div class="ico">${s[0]}</div><small>${s[2]}</small><b>${s[1]}</b><small>${s[3]}</small></div>`).join('')}</div>
+  <div class="card"><div class="section-title">Statistik Pengecekan (${bk.length&&D.checks.length&&bk.length*1>0&&(new Date(D.t)-new Date(D.f))/864e5>=31?'per minggu':'per hari'})</div>
+    <div class="rp-chart">${bk.map(b=>`<div class="rp-col"><div class="rp-bars">${bar(b.k,'#1D63F0','Keluar')}${bar(b.m,'#12A37F','Masuk')}${bar(b.f,'#E5484D','Temuan')}</div><span>${b.l}</span></div>`).join('')}</div>
+    <div class="cal-lg"><span><u style="background:#1D63F0"></u>Keluar</span><span><u style="background:#12A37F"></u>Masuk</span><span><u style="background:#E5484D"></u>Temuan</span><span>Maks ${mx}</span></div></div>
+  <div class="card"><div class="section-title">Per Kendaraan</div>${D.veh.map(x=>`<div class="vrow"><div class="info"><b>${esc(x.n)}</b><span>${esc(x.nm)} · ${x.j}${x.last!=null?' · KM '+nf(x.last):''}</span></div><div style="text-align:right;font-size:12px;color:var(--ink-soft)">${x.trip} trip · ${x.chk} cek<br>${nf(x.km)} km <span class="pill ${x.tem?'bad':'ok'}">${x.tem} temuan</span></div></div>`).join('')}</div>
+  <div class="card"><div class="section-title">Temuan / Perbaikan</div>${D.tem.length?D.tem.slice(0,30).map(c=>`<div class="rem" style="border-left-color:#E5484D" onclick="openDetail('${c.t.id}')"><b>${esc(c.t.nopol)}</b> — ${fmtDateID(c.d)} (${c.m})<br>${esc(findingText(c.t))}</div>`).join(''):'<div class="empty-state" style="padding:20px">Tidak ada temuan pada periode ini.</div>'}</div>`;
+}
+function buildReport(){
+  const d=new Date();d.setDate(d.getDate()-29);
+  document.getElementById('view-laporan').innerHTML=`<div class="hdr"><h2>Laporan</h2><p>Ringkasan data dan statistik dari riwayat checklist.</p></div>
+  <div class="card"><div class="grid-2"><div class="field"><label>Dari</label><input type="date" id="rp_from" class="mono" value="${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}" onchange="renderReport()"></div>
+  <div class="field"><label>Sampai</label><input type="date" id="rp_to" class="mono" value="${nowDate()}" onchange="renderReport()"></div></div>
+  <div class="field"><label>Kendaraan</label><select id="rp_veh" onchange="renderReport()"><option value="">Semua kendaraan</option>${VEHICLES.map(v=>`<option value="${v.nopol}">${v.label}</option>`).join('')}</select></div>
+  <button class="btn keluar" id="rp_btn" onclick="exportReportPdf()">Export PDF</button></div><div id="rp_body"></div>`;
+  renderReport();
+}
+function loadScript(src){return new Promise((res,rej)=>{if(document.querySelector(`script[src="${src}"]`))return res();const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>rej(new Error('Gagal memuat pustaka PDF — cek koneksi'));document.head.appendChild(s);});}
+async function exportReportPdf(){
+  const D=rpData(),btn=document.getElementById('rp_btn');
+  if(D.f>D.t)return toast('Tanggal awal harus sebelum tanggal akhir');
+  if(!D.checks.length)return toast('Tidak ada data pada periode ini');
+  btn.disabled=true;btn.textContent='Membuat PDF...';
+  try{
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js');
+    const doc=new window.jspdf.jsPDF({orientation:'landscape',unit:'pt',format:'a4'}),W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight();
+    doc.setFillColor(10,33,80);doc.rect(0,0,W,64,'F');doc.setTextColor(255);
+    doc.setFont('helvetica','bold');doc.setFontSize(20);doc.text('SEVEN',40,32);
+    doc.setFont('helvetica','normal');doc.setFontSize(10);doc.text('Vehicle Checklist - BC Campang Raya',40,48);
+    doc.setFont('helvetica','bold');doc.setFontSize(14);doc.text('Laporan Pengecekan Kendaraan',W-40,32,{align:'right'});
+    doc.setFont('helvetica','normal');doc.setFontSize(9);doc.text(`Periode ${fmtDateID(D.f)} - ${fmtDateID(D.t)}`,W-40,48,{align:'right'});
+    doc.setTextColor(11,31,68);doc.setFontSize(10);
+    doc.text(`Kendaraan: ${D.v?vLabel(D.v):'Semua kendaraan'}   |   Dibuat: ${fmtDateID(nowDate())}`,40,86);
+    doc.autoTable({startY:98,theme:'grid',head:[['Total Pengecekan','Kendaraan Dipakai','Temuan / Perbaikan','Total Jarak (km)']],body:[[D.checks.length,`${D.used} dari ${VEHICLES.length}`,D.tem.length,nf(D.km)]],headStyles:{fillColor:[29,99,240]},styles:{halign:'center',fontSize:10}});
+    doc.autoTable({startY:doc.lastAutoTable.finalY+16,theme:'striped',head:[['Nopol','Kendaraan','Jenis','Trip','Pengecekan','Temuan','Jarak (km)','KM Terakhir']],body:D.veh.map(x=>[x.n,x.nm,x.j,x.trip,x.chk,x.tem,nf(x.km),x.last!=null?nf(x.last):'-']),headStyles:{fillColor:[10,33,80]},styles:{fontSize:9}});
+    const fb=b=>b?`${cleanTimeValue(b.jam)} / ${sv(b.km)||'-'} / ${sv(b.bensin)||'-'}`:'-';
+    const rows=D.trips.slice().sort((a,b)=>cleanDateValue((a.keluar||a.masuk).tanggal).localeCompare(cleanDateValue((b.keluar||b.masuk).tanggal)));
+    doc.autoTable({startY:doc.lastAutoTable.finalY+16,theme:'striped',head:[['Tanggal','Nopol','Pemakai','Keperluan','Keluar (jam / KM / BBM)','Masuk (jam / KM / BBM)','Jarak','Temuan']],
+      body:rows.map(x=>[fmtDateID((x.keluar||x.masuk).tanggal),x.nopol,sv(x.pemakai),sv(x.keperluan),fb(x.keluar),fb(x.masuk),x.masuk?nf(tripDist(x))+' km':'-',findingText(x)||'-']),
+      headStyles:{fillColor:[10,33,80]},styles:{fontSize:8,cellPadding:3},columnStyles:{7:{cellWidth:170}}});
+    const n=doc.getNumberOfPages();
+    for(let i=1;i<=n;i++){doc.setPage(i);doc.setFontSize(8);doc.setTextColor(120);doc.text('SEVEN Vehicle Checklist',40,H-20);doc.text(`Halaman ${i} / ${n}`,W-40,H-20,{align:'right'});}
+    doc.save(`Laporan_SEVEN_${D.f}_${D.t}.pdf`);toast('PDF berhasil dibuat');
+  }catch(e){toast(e.message);}
+  btn.disabled=false;btn.textContent='Export PDF';
+}
+</script>
+</body>
+</html>
